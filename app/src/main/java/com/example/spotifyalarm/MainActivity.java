@@ -90,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
         minute = sharedPreferences.getInt("time_minute", 0);
 
         setCalendar();
-        setBtnSetTimeText();
 
 
         binding.btnSelect.setOnClickListener(new View.OnClickListener() {
@@ -188,15 +187,9 @@ public class MainActivity extends AppCompatActivity {
                 editor.putInt("time_minute", timePicker.getMinute());
                 editor.apply();
 
-                setBtnSetTimeText();
-
                 setCalendar();
             }
         });
-    }
-
-    public void setBtnSetTimeText(){
-        binding.btnSetTime.setText(hour + ":" + minute);
     }
 
     public void setCalendar(){
@@ -208,6 +201,9 @@ public class MainActivity extends AppCompatActivity {
         if(calendar.getTimeInMillis() < System.currentTimeMillis()){
             calendar.add(Calendar.DATE, 1);
         }
+
+        binding.btnSetTime.setText(new SimpleDateFormat("HH:mm").format(calendar.getTime()));
+        binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(calendar.getTime()));
     }
 
     public void setAlarm(){
@@ -220,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
         createText(
                 new SimpleDateFormat("HH:mm:ss").format(calendar.getTime()) + " ; " + new SimpleDateFormat("HH:mm:ss:SSS").format(Calendar.getInstance().getTime().getTime())
         );
-        createText(calendar.getTimeInMillis() + " ; " + System.currentTimeMillis());
 
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
     }
@@ -239,5 +234,14 @@ public class MainActivity extends AppCompatActivity {
         TextView textView = new TextView(this);
         textView.setText(text);
         binding.testLayout.addView(textView);
+    }
+
+    @Override
+    protected void onDestroy() {
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction("restartservice");
+        broadcastIntent.setClass(this, AlarmReceiver.class);
+        this.sendBroadcast(broadcastIntent);
+        super.onDestroy();
     }
 }
