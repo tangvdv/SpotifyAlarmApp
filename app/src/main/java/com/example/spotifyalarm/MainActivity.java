@@ -3,7 +3,9 @@ package com.example.spotifyalarm;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.FragmentManager;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -66,8 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private MaterialTimePicker timePicker;
     private Calendar calendar;
-    private AlarmManager alarmManager;
-    private PendingIntent pendingIntent;
+    private Intent alarmServiceIntent;
 
     private SharedPreferences sharedPreferences;
 
@@ -77,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -110,10 +112,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
-                    setAlarm();
+                    alarmServiceIntent = new Intent(context, AlarmManagerService.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable("calendar", calendar);
+                    alarmServiceIntent.putExtras(bundle);
+                    startService(alarmServiceIntent);
                 }
                 else{
-                    cancelAlarm();
+                    stopService(alarmServiceIntent);
                 }
             }
         });
@@ -204,44 +210,5 @@ public class MainActivity extends AppCompatActivity {
 
         binding.btnSetTime.setText(new SimpleDateFormat("HH:mm").format(calendar.getTime()));
         binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(calendar.getTime()));
-    }
-
-    public void setAlarm(){
-        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-
-        createText(
-                new SimpleDateFormat("HH:mm:ss").format(calendar.getTime()) + " ; " + new SimpleDateFormat("HH:mm:ss:SSS").format(Calendar.getInstance().getTime().getTime())
-        );
-
-        Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
-    }
-
-    public void cancelAlarm(){
-        if(pendingIntent != null){
-            if(alarmManager == null){
-                alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-            }
-            alarmManager.cancel(pendingIntent);
-            Toast.makeText(this, "Alarm Canceled", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public void createText(String text){
-        TextView textView = new TextView(this);
-        textView.setText(text);
-        binding.testLayout.addView(textView);
-    }
-
-    @Override
-    protected void onDestroy() {
-        Intent broadcastIntent = new Intent();
-        broadcastIntent.setAction("restartservice");
-        broadcastIntent.setClass(this, AlarmReceiver.class);
-        this.sendBroadcast(broadcastIntent);
-        super.onDestroy();
     }
 }

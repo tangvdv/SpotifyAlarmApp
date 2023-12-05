@@ -6,38 +6,38 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-public class MyService extends Service {
+public class MusicService extends Service {
     SpotifyAppRemote mySpotifyAppRemote;
     String playlist_uri;
 
-    public MyService() {
-    }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
-
-        //Toast.makeText(getApplicationContext(),"Alarm triggered", Toast.LENGTH_SHORT).show();
 
         SharedPreferences sharedPreferences = getSharedPreferences(
                "Settings", Context.MODE_PRIVATE
         );
         playlist_uri = sharedPreferences.getString("playlist_uri", "");
 
+        Log.i("MusicService", "MusicService Started");
         startActivity();
-
         return START_STICKY;
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i("MusicService", "MusicService Destroyed");
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
     }
 
     private void startActivity(){
@@ -55,7 +55,7 @@ public class MyService extends Service {
             }
             @Override
             public void onFailure(Throwable throwable) {
-                Log.e("AlarmReceiver", throwable.getMessage(), throwable);
+                Log.e("MusicService", throwable.getMessage(), throwable);
             }
         });
     }
@@ -63,11 +63,13 @@ public class MyService extends Service {
     private void play(){
         if(mySpotifyAppRemote != null){
             mySpotifyAppRemote.getPlayerApi().play(playlist_uri);
+            Log.i("MusicService", "Play");
         }
         else{
             Log.e("AlarmReceiver", "SpotifyPlayerApi object null");
         }
 
+        stopService(new Intent(this, AlarmManagerService.class));
         this.stopSelf();
     }
 }
