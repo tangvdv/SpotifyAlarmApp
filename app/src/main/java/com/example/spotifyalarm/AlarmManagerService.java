@@ -25,19 +25,17 @@ import java.util.Calendar;
 
 public class AlarmManagerService extends Service {
     PendingIntent pendingIntent;
-
-    Calendar calendar;
     AlarmManager alarmManager;
-
     Context context;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
         context = this;
+
         Log.i("AlarmManagerService", "Service Started");
-        if(calendar == null) calendar = (Calendar) intent.getExtras().getSerializable("calendar");
         setAlarm();
+
         return START_STICKY;
     }
 
@@ -62,6 +60,10 @@ public class AlarmManagerService extends Service {
         Intent intent = new Intent(this, AlarmReceiver.class);
         pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        AlarmModel.getInstance().setPendingIntent(pendingIntent);
+
+        Calendar calendar = AlarmModel.getInstance().getCalendar();
+
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
         setNotification();
@@ -78,6 +80,7 @@ public class AlarmManagerService extends Service {
                 alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             }
             alarmManager.cancel(pendingIntent);
+            AlarmModel.getInstance().setPendingIntent(null);
             Toast.makeText(this, "Alarm Canceled", Toast.LENGTH_SHORT).show();
         }
         super.onDestroy();

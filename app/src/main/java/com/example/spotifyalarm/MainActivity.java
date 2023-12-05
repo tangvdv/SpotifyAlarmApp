@@ -84,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
         sharedPreferences = this.getSharedPreferences("Settings", Context.MODE_PRIVATE);
 
+        alarmServiceIntent = new Intent(this, AlarmManagerService.class);
+
         context = this;
 
         startActivity();
@@ -93,7 +95,14 @@ public class MainActivity extends AppCompatActivity {
 
         setCalendar();
 
+        binding.setAlarmSwitch.setChecked(
+                (AlarmModel.getInstance().getPendingIntent() != null)
+        );
 
+        bindingManager();
+    }
+
+    private void bindingManager(){
         binding.btnSelect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -112,10 +121,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
-                    alarmServiceIntent = new Intent(context, AlarmManagerService.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("calendar", calendar);
-                    alarmServiceIntent.putExtras(bundle);
                     startService(alarmServiceIntent);
                 }
                 else{
@@ -125,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void startActivity(){
+    private void startActivity(){
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
 
@@ -165,19 +170,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void selectPlaylist(){
+    private void selectPlaylist(){
         PlaylistModel playlistModel = playlistModelList.get((int) binding.spinnerPlaylist.getSelectedItemId());
         playlist_uri = playlistModel.getSpotifyId();
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("playlist_uri", playlist_uri);
-        editor.apply();
+        AlarmModel.getInstance().setPlaylist_uri(playlist_uri);
     }
 
-    public void selectTime(){
+    private void selectTime(){
         timePicker = new MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_24H)
-                .setHour(sharedPreferences.getInt("time_hour", 0))
-                .setMinute(sharedPreferences.getInt("time_minute", 0))
+                .setHour(hour)
+                .setMinute(minute)
                 .setTitleText("Select Alarm Time")
                 .build();
 
@@ -194,11 +197,15 @@ public class MainActivity extends AppCompatActivity {
                 editor.apply();
 
                 setCalendar();
+
+                if(AlarmModel.getInstance().getPendingIntent() != null){
+                    startService(alarmServiceIntent);
+                }
             }
         });
     }
 
-    public void setCalendar(){
+    private void setCalendar(){
         calendar = calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         calendar.set(Calendar.MINUTE, minute);
@@ -208,7 +215,15 @@ public class MainActivity extends AppCompatActivity {
             calendar.add(Calendar.DATE, 1);
         }
 
-        binding.btnSetTime.setText(new SimpleDateFormat("HH:mm").format(calendar.getTime()));
-        binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(calendar.getTime()));
+        AlarmModel.getInstance().setCalendar(calendar);
+
+        setAlarmTextDate(calendar);
+    }
+
+    private void setAlarmTextDate(Calendar calendar){
+        if(calendar != null) {
+            binding.btnSetTime.setText(new SimpleDateFormat("HH:mm").format(calendar.getTime()));
+            binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(calendar.getTime()));
+        }
     }
 }

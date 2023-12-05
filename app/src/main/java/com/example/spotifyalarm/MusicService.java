@@ -13,16 +13,10 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 public class MusicService extends Service {
     SpotifyAppRemote mySpotifyAppRemote;
-    String playlist_uri;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
-
-        SharedPreferences sharedPreferences = getSharedPreferences(
-               "Settings", Context.MODE_PRIVATE
-        );
-        playlist_uri = sharedPreferences.getString("playlist_uri", "");
 
         Log.i("MusicService", "MusicService Started");
         startActivity();
@@ -62,7 +56,7 @@ public class MusicService extends Service {
 
     private void play(){
         if(mySpotifyAppRemote != null){
-            mySpotifyAppRemote.getPlayerApi().play(playlist_uri);
+            mySpotifyAppRemote.getPlayerApi().play(AlarmModel.getInstance().getPlaylist_uri());
             Log.i("MusicService", "Play");
         }
         else{
