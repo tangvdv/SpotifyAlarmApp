@@ -40,14 +40,15 @@ public class AlarmManagerService extends Service {
     }
 
     private void setNotification(){
-        String CHANNEL_ID = "example.permanence";
-
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Your Foreground Service")
-                .setContentText("Service is running in the foreground")
+        String NOTIFICATION_CHANNEL_ID = "example.permanence";
+        long notificationId = System.currentTimeMillis();
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
+        Notification notification = notificationBuilder.setOngoing(true)
+                .setContentTitle("Alarm is running")
+                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .setCategory(Notification.CATEGORY_SERVICE)
                 .build();
-
-        startForeground(1, notification);
+        startForeground((int) notificationId, notification);
     }
 
     @Override
@@ -75,20 +76,26 @@ public class AlarmManagerService extends Service {
     }
 
     public void cancelAlarm(){
-        if(pendingIntent != null){
-            if(alarmManager == null){
+        if(pendingIntent != null) {
+            if (alarmManager == null) {
                 alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             }
             alarmManager.cancel(pendingIntent);
             AlarmModel.getInstance().setPendingIntent(null);
             Toast.makeText(this, "Alarm Canceled", Toast.LENGTH_SHORT).show();
         }
-        super.onDestroy();
     }
 
     @Override
     public void onDestroy() {
-        Log.i("AlarmManagerService", "Service Destroyed");
-        cancelAlarm();
+        if(AlarmModel.getInstance().getPendingIntent() != null){
+            Log.i("AlarmManagerService", "Service Restarted");
+            startService(new Intent(this, AlarmManagerService.class));
+        }
+        else{
+            Log.i("AlarmManagerService", "Service Destroyed");
+            cancelAlarm();
+            super.onDestroy();
+        }
     }
 }

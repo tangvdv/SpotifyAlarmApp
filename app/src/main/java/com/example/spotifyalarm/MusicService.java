@@ -63,6 +63,7 @@ public class MusicService extends Service {
             Log.e("AlarmReceiver", "SpotifyPlayerApi object null");
         }
 
+        AlarmModel.getInstance().setPendingIntent(null);
         stopService(new Intent(this, AlarmManagerService.class));
         this.stopSelf();
     }

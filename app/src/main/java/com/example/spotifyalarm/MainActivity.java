@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
                     startService(alarmServiceIntent);
                 }
                 else{
+                    AlarmModel.getInstance().setPendingIntent(null);
                     stopService(alarmServiceIntent);
                 }
             }
