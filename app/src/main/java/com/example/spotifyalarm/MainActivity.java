@@ -11,6 +11,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,6 +29,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.spotifyalarm.databinding.ActivityMainBinding;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -49,6 +52,8 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -58,12 +63,13 @@ import java.util.Objects;
 import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
-    public Context context;
-    public String playlist_uri;
-    public SpotifyAPI spotifyAPI;
+    private Context context;
+    private String playlistUri;
+    private String playlistId;
+    private SpotifyAPI spotifyAPI;
 
-    public ArrayAdapter<String> spinnerAdapter;
-    public List<PlaylistModel> playlistModelList;
+    private ArrayAdapter<String> spinnerAdapter;
+    private List<PlaylistModel> playlistModelList;
 
     private ActivityMainBinding binding;
     private MaterialTimePicker timePicker;
@@ -74,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
     private int hour;
     private int minute;
+
+    private AuthorizationResponse response;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
         hour = sharedPreferences.getInt("time_hour", 0);
         minute = sharedPreferences.getInt("time_minute", 0);
+        playlistId = sharedPreferences.getString("playlistId", "");
 
         setCalendar();
 
@@ -106,7 +115,14 @@ public class MainActivity extends AppCompatActivity {
         binding.btnSelect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                selectPlaylist();
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                PlaylistModel playlistModel = playlistModelList.get((int) binding.spinnerPlaylist.getSelectedItemId());
+                playlistId = playlistModel.getId();
+                editor.putString("playlistId", playlistId);
+                editor.apply();
+                selectPlaylist(playlistModel.getPlaylistUri());
+                getSpotifyPlaylist(playlistId);
+
             }
         });
 
@@ -145,11 +161,13 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, intent);
 
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
-            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
+            response = AuthorizationClient.getResponse(resultCode, intent);
+            getSpotifyPlaylist(playlistId);
 
             if (response.getType() == AuthorizationResponse.Type.TOKEN) {
+                Log.i("MainActivity", "TOKEN : "+response.getAccessToken());
                 spotifyAPI = new SpotifyAPI(this, response.getAccessToken());
-                spotifyAPI.getUserPlaylist(new SpotifyAPI.PlaylistCallBack() {
+                spotifyAPI.getUserPlaylist(new SpotifyAPI.UserPlaylistsCallBack() {
                     @Override
                     public void onSuccess(List<PlaylistModel> list) {
                         if(list != null && !list.isEmpty()){
@@ -164,17 +182,43 @@ public class MainActivity extends AppCompatActivity {
                     }
                     @Override
                     public void onError(String error) {
-                        Log.e("MainActivity", error);
+                        Log.e("MainActivity | SpotifyUserPlaylists", error);
                     }
                 });
             }
         }
     }
 
-    private void selectPlaylist(){
-        PlaylistModel playlistModel = playlistModelList.get((int) binding.spinnerPlaylist.getSelectedItemId());
-        playlist_uri = playlistModel.getSpotifyId();
-        AlarmModel.getInstance().setPlaylist_uri(playlist_uri);
+    private void getSpotifyPlaylist(String playlistId){
+        Log.i("MainActivity", "PlaylistId : "+playlistId);
+        if(!playlistId.equals("")){
+            if(response.getType() == AuthorizationResponse.Type.TOKEN){
+                spotifyAPI = new SpotifyAPI(this, response.getAccessToken());
+                spotifyAPI.getPlaylist(new SpotifyAPI.PlaylistCallBack() {
+                    @Override
+                    public void onSuccess(PlaylistModel playlistModel) {
+                        setPlaylistLayout(playlistModel);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Log.e("MainActivity | SpotifyPlaylist", error);
+                    }
+                }, playlistId);
+            }
+        }
+    }
+
+    private void setPlaylistLayout(PlaylistModel playlist){
+        binding.textPlaylistName.setText(playlist.getName());
+        binding.textPlaylistOwner.setText(playlist.getOwnerName());
+        Glide.with(context)
+                .load(playlist.getImage_url())
+                .into(binding.imagePlaylist);
+    }
+
+    private void selectPlaylist(String playlistUri){
+        AlarmModel.getInstance().setPlaylist_uri(playlistUri);
     }
 
     private void selectTime(){

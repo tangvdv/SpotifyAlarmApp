@@ -47,5 +47,9 @@ dependencies {
 
     implementation("com.android.volley:volley:1.2.1")
 
-    implementation(files("C:/Users/tangr/Desktop/spotify-app-remote-release-0.8.0.aar"))
+    implementation(files("D:/Users/tangr/AndroidStudioProjects/SpotifyAlarm/spotify-app-remote-release-0.8.0.aar"))
+
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    implementation("com.github.siyamed:android-shape-imageview:0.9.+@aar")
 }

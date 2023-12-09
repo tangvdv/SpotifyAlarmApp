@@ -1,19 +1,23 @@
 package com.example.spotifyalarm;
 
 public class PlaylistModel {
-    private int id;
+    private String id;
     private String name;
-    private String spotify_id;
+    private String playlist_uri;
     private String image_url;
+    private String owner_name;
 
-    public PlaylistModel(int id, String name, String spotify_id, String image_url) {
+    public PlaylistModel(String id, String name, String playlist_uri, String image_url, String owner_name) {
         this.id = id;
         this.name = name;
-        this.spotify_id = spotify_id;
+        this.playlist_uri = playlist_uri;
         this.image_url = image_url;
+        this.owner_name = owner_name;
     }
 
-    public void setId(int id) {
+    public String getId() { return this.id; }
+
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -25,12 +29,12 @@ public class PlaylistModel {
         this.name = name;
     }
 
-    public String getSpotifyId() {
-        return spotify_id;
+    public String getPlaylistUri() {
+        return playlist_uri;
     }
 
-    public void setSpotifyId(String spotify_id) {
-        this.spotify_id = spotify_id;
+    public void setPlaylistUri(String playlist_uri) {
+        this.playlist_uri = playlist_uri;
     }
 
     public String getImage_url() {
@@ -39,5 +43,13 @@ public class PlaylistModel {
 
     public void setImage_url(String image_url) {
         this.image_url = image_url;
+    }
+
+    public String getOwnerName() {
+        return owner_name;
+    }
+
+    public void setOwnerName(String owner_name) {
+        this.owner_name = owner_name;
     }
 }

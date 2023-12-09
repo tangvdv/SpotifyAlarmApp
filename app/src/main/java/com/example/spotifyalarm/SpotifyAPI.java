@@ -16,15 +16,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SpotifyAPI {
-    public interface PlaylistCallBack{
+    public interface UserPlaylistsCallBack{
         void onSuccess(List<PlaylistModel> playlistModelList);
+        void onError(String error);
+    }
+
+    public interface PlaylistCallBack{
+        void onSuccess(PlaylistModel playlistModel);
+
         void onError(String error);
     }
 
@@ -39,7 +44,7 @@ public class SpotifyAPI {
         this.TOKEN = token;
     }
 
-    public void getUserPlaylist(PlaylistCallBack callback){
+    public void getUserPlaylist(UserPlaylistsCallBack callback){
         RequestQueue reqQueue = Volley.newRequestQueue(context);
 
         StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/me/playlists", new Response.Listener<String>() {
@@ -51,30 +56,76 @@ public class SpotifyAPI {
                     playlistModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject playlist = array.getJSONObject(i);
+                        JSONObject owner = playlist.getJSONObject("owner");
                         JSONArray images = new JSONArray(playlist.getString("images"));
                         PlaylistModel playlistModel = new PlaylistModel(
-                                i,
+                                playlist.getString("id"),
                                 playlist.getString("name"),
                                 playlist.getString("uri"),
-                                ""
-                                //images.getJSONObject(1).getString("url")
+                                "",
+                                owner.getString("display_name")
                         );
+                        //Log.i("SpotifyAPI", "id : " + playlist.getString("id"));
                         playlistModelList.add(playlistModel);
                     }
 
                     callback.onSuccess(playlistModelList);
 
-                    Log.v("api", "onResponseValid : " + array);
+                    Log.v("SpotifyAPI", "onResponseValid : " + array);
                 } catch(JSONException e){
                     e.printStackTrace();
-                    Log.e("api", "onResponseError : " + e);
+                    Log.e("SpotifyAPI", "onResponseError : " + e);
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 callback.onError(error.toString());
-                Log.d("API Test", "onErrorResponse: "+ error);
+            }
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                String auth = "Bearer " + TOKEN;
+                headers.put("Accept", "application/json");
+                headers.put("Content-Type", "application/json");
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };
+        reqQueue.add(request);
+    }
+
+    public void getPlaylist(PlaylistCallBack callback, String playlistId){
+        RequestQueue reqQueue = Volley.newRequestQueue(context);
+        Log.i("SpotifyAPI", context.getString(R.string.spotify_api_uri)+ "/playlists/" + playlistId);
+        StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/playlists/" + playlistId, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try{
+                    JSONObject obj = new JSONObject(response);
+                    JSONObject owner = new JSONObject(obj.getString("owner"));
+                    JSONObject images = new JSONArray(obj.getString("images")).getJSONObject(0);
+                    PlaylistModel playlistModel = new PlaylistModel(
+                            obj.getString("id"),
+                            obj.getString("name"),
+                            obj.getString("uri"),
+                            images.getString("url"),
+                            owner.getString("display_name")
+                    );
+
+                    callback.onSuccess(playlistModel);
+
+                    Log.v("SpotifyAPI", "onResponseValid : " + obj);
+                } catch(JSONException e){
+                    e.printStackTrace();
+                    Log.e("SpotifyAPI", "onResponseError : " + e);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onError(error.toString());
             }
         }){
             @Override
