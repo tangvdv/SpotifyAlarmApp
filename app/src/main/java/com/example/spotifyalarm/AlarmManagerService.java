@@ -1,7 +1,5 @@
 package com.example.spotifyalarm;
 
-import static android.content.Intent.getIntent;
-
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -10,10 +8,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -39,8 +33,14 @@ public class AlarmManagerService extends Service {
         return START_STICKY;
     }
 
-    private void setNotification(){
+    private void createNotification(){
         String NOTIFICATION_CHANNEL_ID = "example.permanence";
+        String channelName = "channel";
+        NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_HIGH);
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.createNotificationChannel(chan);
+
         long notificationId = System.currentTimeMillis();
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         Notification notification = notificationBuilder.setOngoing(true)
@@ -48,6 +48,7 @@ public class AlarmManagerService extends Service {
                 .setPriority(NotificationManager.IMPORTANCE_HIGH)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build();
+
         startForeground((int) notificationId, notification);
     }
 
@@ -67,7 +68,7 @@ public class AlarmManagerService extends Service {
 
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
-        setNotification();
+        createNotification();
 
         Log.i("AlarmManagerService", "Set alarm : " +
                 new SimpleDateFormat("HH:mm:ss").format(calendar.getTime()) + " ; " + new SimpleDateFormat("HH:mm:ss:SSS").format(Calendar.getInstance().getTime().getTime()));
@@ -89,11 +90,9 @@ public class AlarmManagerService extends Service {
     @Override
     public void onDestroy() {
         if(AlarmModel.getInstance().getPendingIntent() != null){
-            Log.i("AlarmManagerService", "Service Restarted");
             startService(new Intent(this, AlarmManagerService.class));
         }
         else{
-            Log.i("AlarmManagerService", "Service Destroyed");
             cancelAlarm();
             super.onDestroy();
         }
