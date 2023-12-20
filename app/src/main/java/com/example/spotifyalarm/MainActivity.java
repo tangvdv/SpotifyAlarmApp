@@ -106,6 +106,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context, MusicSelectionList.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void startActivity(){

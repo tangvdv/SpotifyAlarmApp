@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MusicSelectionList"
+    android:background="@color/black">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/app_background"
+        android:orientation="vertical">
+
+
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal" >
+
+            <ToggleButton
+                android:id="@+id/btnPlaylist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/toggle_button_background"
+                android:textColor="@drawable/toggle_button_text"
+                android:textOff="@string/toggle_button_playlist"
+                android:textOn="@string/toggle_button_playlist"
+                android:textSize="12dp"/>
+
+            <ToggleButton
+                android:id="@+id/btnAlbum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/toggle_button_background"
+                android:textColor="@drawable/toggle_button_text"
+                android:textOff="@string/toggle_button_album"
+                android:textOn="@string/toggle_button_album"
+                android:textSize="12dp"/>
+
+            <ToggleButton
+                android:id="@+id/btnArtist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/toggle_button_background"
+                android:textColor="@drawable/toggle_button_text"
+                android:textOff="@string/toggle_button_artist"
+                android:textOn="@string/toggle_button_artist"
+                android:textSize="12dp"/>
+        </RadioGroup>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:padding="10dp" >
+
+            <LinearLayout
+                android:id="@+id/libraryLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+            </LinearLayout>
+        </ScrollView>
+
+    </LinearLayout>
+</RelativeLayout>
