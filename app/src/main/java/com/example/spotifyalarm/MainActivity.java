@@ -12,6 +12,11 @@ import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.MultiTransformation;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMainBinding;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
@@ -188,6 +193,9 @@ public class MainActivity extends AppCompatActivity {
         binding.textPlaylistOwner.setText(playlist.getOwnerName());
         Glide.with(context)
                 .load(playlist.getImage_url())
+                .apply(new RequestOptions()
+                        .transform(new CenterCrop(), new RoundedCorners(10))
+                )
                 .into(binding.imagePlaylist);
     }
 

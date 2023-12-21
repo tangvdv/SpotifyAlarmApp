@@ -1,15 +1,12 @@
 package com.example.spotifyalarm;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -19,9 +16,10 @@ import android.widget.Toast;
 
 import com.airbnb.paris.Paris;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMusicSelectionListBinding;
-import com.github.siyamed.shapeimageview.ShapeImageView;
-import com.github.siyamed.shapeimageview.mask.PorterShapeImageView;
 
 public class MusicSelectionList extends AppCompatActivity {
 
@@ -51,7 +49,7 @@ public class MusicSelectionList extends AppCompatActivity {
         });
     }
 
-    private void createLibrary(){
+    private void createLibrary() {
         for (int i = 0; i < 10; i++) {
             FrameLayout fl = createLibraryButton(i);
             binding.libraryLayout.addView(fl);
@@ -71,10 +69,14 @@ public class MusicSelectionList extends AppCompatActivity {
         RelativeLayout rl = new RelativeLayout(context);
         rl.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        PorterShapeImageView imageView = new PorterShapeImageView(this);
+        ImageView imageView = new ImageView(this);
         Paris.style(imageView).apply(R.style.library_image);
+
         Glide.with(context)
-                .load("https://picsum.photos/200")
+                .load("https://picsum.photos/100")
+                .apply(new RequestOptions()
+                        .transform(new CenterCrop(), new RoundedCorners(10))
+                )
                 .into(imageView);
 
         TextView tv_name = new TextView(context);

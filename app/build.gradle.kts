@@ -51,7 +51,5 @@ dependencies {
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
 
-    implementation("com.github.siyamed:android-shape-imageview:0.9.3@aar")
-
     implementation("com.airbnb.android:paris:2.0.0")
 }

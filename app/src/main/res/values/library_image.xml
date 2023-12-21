@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style  name="library_image">
+    <style name="library_image">
         <item name="android:layout_width">80dp</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="cardCornerRadius">10dp</item>
+        <item name="android:layout_height">80dp</item>
         <item name="android:layout_alignParentStart">true</item>
         <item name="android:layout_marginStart">10dp</item>
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_marginBottom">10dp</item>
-        <item name="siShape">@drawable/shape_rounded_rectangle</item>
-        <item name="siSquare">true</item>
     </style>
 </resources>
