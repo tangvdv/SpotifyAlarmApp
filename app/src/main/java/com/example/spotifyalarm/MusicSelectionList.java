@@ -3,10 +3,12 @@ package com.example.spotifyalarm;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -32,6 +34,8 @@ public class MusicSelectionList extends AppCompatActivity {
     private ActivityMusicSelectionListBinding binding;
     private List<String> filterTypes;
     private List<MusicModel> musicModelList;
+    private SpotifyAPI spotifyAPI;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +50,33 @@ public class MusicSelectionList extends AppCompatActivity {
         filterTypes = new ArrayList<>(3);
         musicModelList = new ArrayList<>();
 
+        sharedPreferences = this.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        String token = sharedPreferences.getString("TOKEN", null);
+        if(token != null){
+           getUserPlaylists(token);
+        }
+        else{
+            Log.e("MusicSelectionList", "TOKEN is null");
+        }
+
         bindingManager();
+    }
+
+    private void getUserPlaylists(String token){
+        spotifyAPI = new SpotifyAPI(this, token);
+        spotifyAPI.getUserPlaylist(new SpotifyAPI.UserPlaylistsCallBack() {
+            @Override
+            public void onSuccess(List<MusicModel> list) {
+                if(list != null && !list.isEmpty()){
+                    musicModelList = list;
+                    updateLibrary(musicModelList);
+                }
+            }
+            @Override
+            public void onError(String error) {
+                Log.e("MainActivity | SpotifyUserPlaylists", error);
+            }
+        });
     }
 
     private void bindingManager(){
@@ -117,7 +147,7 @@ public class MusicSelectionList extends AppCompatActivity {
         fl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onClickLibraryButton(musicModel.getId());
+                onClickLibraryButton(musicModel.getMusicUri());
             }
         });
 
@@ -143,9 +173,9 @@ public class MusicSelectionList extends AppCompatActivity {
         TextView tv_type = new TextView(context);
         Paris.style(tv_type).apply(R.style.library_text_item_type);
 
-        String textType = musicModel.getType();
-        if(!Objects.equals(musicModel.getType(), "Artist")){
-            textType += " · " + musicModel.getOwnerName();
+        String textType = musicModel.getType().substring(0, 1).toUpperCase() + musicModel.getType().substring(1).toLowerCase();
+        if(!Objects.equals(musicModel.getType(), "artist")){
+            textType = textType.concat(" · " + musicModel.getOwnerName());
         }
         tv_type.setText(textType);
 
@@ -156,8 +186,8 @@ public class MusicSelectionList extends AppCompatActivity {
         return fl;
     }
 
-    private void onClickLibraryButton(String id){
-        Toast t = Toast.makeText(context, "Id : "+ id, Toast.LENGTH_SHORT);
+    private void onClickLibraryButton(String uri){
+        Toast t = Toast.makeText(context, "uri : "+ uri, Toast.LENGTH_SHORT);
         t.show();
     }
 }

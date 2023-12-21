@@ -134,8 +134,10 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
             response = AuthorizationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthorizationResponse.Type.TOKEN) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("TOKEN", response.getAccessToken());
+                editor.apply();
                 getSpotifyPlaylist(playlistId);
-                showUserPlaylistsInSpinner();
             }
             else{
                 Log.e("MainActivity", "response type wrong");
@@ -144,28 +146,6 @@ public class MainActivity extends AppCompatActivity {
         else{
             Log.e("MainActivity", "request code failed");
         }
-    }
-
-    private void showUserPlaylistsInSpinner(){
-        spotifyAPI = new SpotifyAPI(this, response.getAccessToken());
-        spotifyAPI.getUserPlaylist(new SpotifyAPI.UserPlaylistsCallBack() {
-            @Override
-            public void onSuccess(List<MusicModel> list) {
-                if(list != null && !list.isEmpty()){
-                    ArrayList<String> playListName = new ArrayList<String>(list.size());
-                    musicModelList = list;
-                    list.forEach((p) -> playListName.add(p.getName()));
-
-                    spinnerAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, playListName);
-                    spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    binding.spinnerPlaylist.setAdapter(spinnerAdapter);
-                }
-            }
-            @Override
-            public void onError(String error) {
-                Log.e("MainActivity | SpotifyUserPlaylists", error);
-            }
-        });
     }
 
     private void getSpotifyPlaylist(String playlistId){

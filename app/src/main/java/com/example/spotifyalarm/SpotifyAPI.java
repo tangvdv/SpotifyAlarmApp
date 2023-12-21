@@ -56,16 +56,15 @@ public class SpotifyAPI {
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject playlist = array.getJSONObject(i);
                         JSONObject owner = playlist.getJSONObject("owner");
-                        JSONArray images = new JSONArray(playlist.getString("images"));
+                        JSONObject images = new JSONArray(playlist.getString("images")).getJSONObject(0);
                         MusicModel musicModel = new MusicModel(
                                 playlist.getString("id"),
                                 playlist.getString("name"),
                                 playlist.getString("uri"),
-                                "",
+                                images.getString("url"),
                                 owner.getString("display_name"),
-                                ""
+                                playlist.getString("type")
                         );
-                        //Log.i("SpotifyAPI", "id : " + playlist.getString("id"));
                         musicModelList.add(musicModel);
                     }
 
@@ -112,7 +111,7 @@ public class SpotifyAPI {
                             obj.getString("uri"),
                             images.getString("url"),
                             owner.getString("display_name"),
-                            ""
+                            obj.getString("type")
                     );
 
                     callback.onSuccess(musicModel);
