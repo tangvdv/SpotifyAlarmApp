@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.Header;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -23,19 +22,19 @@ import java.util.Map;
 
 public class SpotifyAPI {
     public interface UserPlaylistsCallBack{
-        void onSuccess(List<PlaylistModel> playlistModelList);
+        void onSuccess(List<MusicModel> musicModelList);
         void onError(String error);
     }
 
     public interface PlaylistCallBack{
-        void onSuccess(PlaylistModel playlistModel);
+        void onSuccess(MusicModel musicModel);
 
         void onError(String error);
     }
 
     private String TOKEN;
 
-    List<PlaylistModel> playlistModelList;
+    List<MusicModel> musicModelList;
 
     Context context;
 
@@ -53,23 +52,24 @@ public class SpotifyAPI {
                 try{
                     JSONObject obj = new JSONObject(response);
                     JSONArray array = new JSONArray(obj.getString("items"));
-                    playlistModelList = new ArrayList<>(array.length());
+                    musicModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject playlist = array.getJSONObject(i);
                         JSONObject owner = playlist.getJSONObject("owner");
                         JSONArray images = new JSONArray(playlist.getString("images"));
-                        PlaylistModel playlistModel = new PlaylistModel(
+                        MusicModel musicModel = new MusicModel(
                                 playlist.getString("id"),
                                 playlist.getString("name"),
                                 playlist.getString("uri"),
                                 "",
-                                owner.getString("display_name")
+                                owner.getString("display_name"),
+                                ""
                         );
                         //Log.i("SpotifyAPI", "id : " + playlist.getString("id"));
-                        playlistModelList.add(playlistModel);
+                        musicModelList.add(musicModel);
                     }
 
-                    callback.onSuccess(playlistModelList);
+                    callback.onSuccess(musicModelList);
 
                     Log.v("SpotifyAPI", "onResponseValid : " + array);
                 } catch(JSONException e){
@@ -106,15 +106,16 @@ public class SpotifyAPI {
                     JSONObject obj = new JSONObject(response);
                     JSONObject owner = new JSONObject(obj.getString("owner"));
                     JSONObject images = new JSONArray(obj.getString("images")).getJSONObject(0);
-                    PlaylistModel playlistModel = new PlaylistModel(
+                    MusicModel musicModel = new MusicModel(
                             obj.getString("id"),
                             obj.getString("name"),
                             obj.getString("uri"),
                             images.getString("url"),
-                            owner.getString("display_name")
+                            owner.getString("display_name"),
+                            ""
                     );
 
-                    callback.onSuccess(playlistModel);
+                    callback.onSuccess(musicModel);
 
                     Log.v("SpotifyAPI", "onResponseValid : " + obj);
                 } catch(JSONException e){

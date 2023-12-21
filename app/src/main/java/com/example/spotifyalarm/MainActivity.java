@@ -12,9 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.MultiTransformation;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
-import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMainBinding;
@@ -35,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private SpotifyAPI spotifyAPI;
 
     private ArrayAdapter<String> spinnerAdapter;
-    private List<PlaylistModel> playlistModelList;
+    private List<MusicModel> musicModelList;
 
     private ActivityMainBinding binding;
     private MaterialTimePicker timePicker;
@@ -82,11 +80,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
-                PlaylistModel playlistModel = playlistModelList.get((int) binding.spinnerPlaylist.getSelectedItemId());
-                playlistId = playlistModel.getId();
+                MusicModel musicModel = musicModelList.get((int) binding.spinnerPlaylist.getSelectedItemId());
+                playlistId = musicModel.getId();
                 editor.putString("playlistId", playlistId);
                 editor.apply();
-                selectPlaylist(playlistModel.getPlaylistUri());
+                selectPlaylist(musicModel.getMusicUri());
                 getSpotifyPlaylist(playlistId);
 
             }
@@ -152,10 +150,10 @@ public class MainActivity extends AppCompatActivity {
         spotifyAPI = new SpotifyAPI(this, response.getAccessToken());
         spotifyAPI.getUserPlaylist(new SpotifyAPI.UserPlaylistsCallBack() {
             @Override
-            public void onSuccess(List<PlaylistModel> list) {
+            public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
                     ArrayList<String> playListName = new ArrayList<String>(list.size());
-                    playlistModelList = list;
+                    musicModelList = list;
                     list.forEach((p) -> playListName.add(p.getName()));
 
                     spinnerAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, playListName);
@@ -176,8 +174,8 @@ public class MainActivity extends AppCompatActivity {
             spotifyAPI = new SpotifyAPI(this, response.getAccessToken());
             spotifyAPI.getPlaylist(new SpotifyAPI.PlaylistCallBack() {
                 @Override
-                public void onSuccess(PlaylistModel playlistModel) {
-                    setPlaylistLayout(playlistModel);
+                public void onSuccess(MusicModel musicModel) {
+                    setPlaylistLayout(musicModel);
                 }
 
                 @Override
@@ -188,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setPlaylistLayout(PlaylistModel playlist){
+    private void setPlaylistLayout(MusicModel playlist){
         binding.textPlaylistName.setText(playlist.getName());
         binding.textPlaylistOwner.setText(playlist.getOwnerName());
         Glide.with(context)
