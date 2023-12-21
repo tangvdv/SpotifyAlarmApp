@@ -6,33 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/dark_grey"
     tools:context=".MainActivity">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="53dp"
-            android:orientation="horizontal">
-
-            <Spinner
-                android:id="@+id/spinnerPlaylist"
-                android:layout_width="321dp"
-                android:layout_height="match_parent"
-                android:spinnerMode="dropdown"
-                android:padding="8dp"
-                android:textColor="@color/white"/>
-
-            <Button
-                android:id="@+id/btnSelect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/dark_red"
-                android:text="Select" />
-
-        </LinearLayout>
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="100dp">
+            android:layout_height="100dp"
+            android:layout_marginTop="30dp">
 
             <Button
                 android:id="@+id/btnMusicSelection"
@@ -40,7 +20,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginLeft="50dp"
                 android:layout_marginRight="50dp"
-                android:backgroundTint="@color/dark_grey"
+                android:backgroundTint="@color/grey"
                 app:cornerRadius="10dp" />
             
             <ImageView
@@ -73,7 +53,7 @@
                 android:layout_marginTop="50dp"
                 android:layout_marginBottom="30dp"
                 android:layout_marginEnd="60dp"
-                android:textColor="@color/grey" />
+                android:textColor="@color/light_grey" />
 
         </RelativeLayout>
 

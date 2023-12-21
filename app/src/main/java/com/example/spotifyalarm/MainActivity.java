@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 
 import com.bumptech.glide.Glide;
@@ -23,17 +22,12 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private Context context;
     private String playlistId;
     private SpotifyAPI spotifyAPI;
-
-    private ArrayAdapter<String> spinnerAdapter;
-    private List<MusicModel> musicModelList;
 
     private ActivityMainBinding binding;
     private MaterialTimePicker timePicker;
@@ -76,20 +70,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void bindingManager(){
-        binding.btnSelect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                MusicModel musicModel = musicModelList.get((int) binding.spinnerPlaylist.getSelectedItemId());
-                playlistId = musicModel.getId();
-                editor.putString("playlistId", playlistId);
-                editor.apply();
-                selectPlaylist(musicModel.getMusicUri());
-                getSpotifyPlaylist(playlistId);
-
-            }
-        });
-
         binding.btnSetTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
