@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class LogFile extends AppCompatActivity {
+    private static final String TAG = "LogFile";
     private static final String FILENAME = "Log_SpotifyAlarm.txt";
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     private FileOutputStream writer;
@@ -22,17 +23,17 @@ public class LogFile extends AppCompatActivity {
 
     public LogFile(Context context) {
         file = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), FILENAME);
-        Log.i("LogFile", file.getPath());
+        Log.i(TAG, file.getPath());
         try {
             if (file.exists()) {
-                Log.i("LogFile", "File already exists");
+                Log.i(TAG, "File already exists");
             } else {
                 boolean fileCreated = file.createNewFile();
                 if (!fileCreated) {
-                    Log.e("LogFile", "Unable to create file at specified path. It already exists");
+                    Log.e(TAG, "Unable to create file at specified path. It already exists");
                 }
             }
-            Log.i("LogFile", writer.toString());
+            Log.i(TAG, writer.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

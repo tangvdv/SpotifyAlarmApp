@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,17 +26,24 @@ import com.example.spotifyalarm.databinding.ActivityMusicSelectionListBinding;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MusicSelectionList extends AppCompatActivity {
+    private static final String TAG = "MusicSelectionList";
 
     private Context context;
     private ActivityMusicSelectionListBinding binding;
     private List<String> filterTypes;
     private List<MusicModel> musicModelList;
+    private boolean fetchedPlaylist, fetchedAlbum, fetchedArtist = false;
     private SpotifyAPI spotifyAPI;
-    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,36 +53,106 @@ public class MusicSelectionList extends AppCompatActivity {
         binding = ActivityMusicSelectionListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        Log.i("MusicSelectionList", "onCreate");
+        Log.i(TAG, "onCreate");
 
         filterTypes = new ArrayList<>(3);
         musicModelList = new ArrayList<>();
 
-        sharedPreferences = this.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = this.getSharedPreferences("Settings", Context.MODE_PRIVATE);
         String token = sharedPreferences.getString("TOKEN", null);
         if(token != null){
-           getUserPlaylists(token);
+           getLibrary(token);
         }
         else{
-            Log.e("MusicSelectionList", "TOKEN is null");
+            Log.e(TAG, "TOKEN is null");
         }
 
         bindingManager();
     }
 
+    private void getLibrary(String token){
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                getUserPlaylists(token);
+                getUserAlbums(token);
+                getUserArtists(token);
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.progressBar.setVisibility(View.VISIBLE);
+                    }
+                });
+
+                while(!fetchedPlaylist || !fetchedAlbum || !fetchedArtist) {
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                Log.i(TAG, "Data fetched");
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.progressBar.setVisibility(View.GONE);
+                        applyFilter();
+                    }
+                });
+            }
+        };
+        thread.start();
+    }
+
     private void getUserPlaylists(String token){
         spotifyAPI = new SpotifyAPI(this, token);
-        spotifyAPI.getUserPlaylist(new SpotifyAPI.UserPlaylistsCallBack() {
+        spotifyAPI.getUserPlaylists(new SpotifyAPI.SpotifyAPICallback() {
             @Override
             public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
-                    musicModelList = list;
-                    updateLibrary(musicModelList);
+                    musicModelList.addAll(list);
+                    fetchedPlaylist = true;
                 }
             }
             @Override
             public void onError(String error) {
-                Log.e("MainActivity | SpotifyUserPlaylists", error);
+                Log.e(TAG, "GetUserPlaylist : " + error);
+            }
+        });
+    }
+
+    private void getUserAlbums(String token){
+        spotifyAPI = new SpotifyAPI(this, token);
+        spotifyAPI.getUserAlbums(new SpotifyAPI.SpotifyAPICallback() {
+            @Override
+            public void onSuccess(List<MusicModel> list) {
+                if(list != null && !list.isEmpty()){
+                    musicModelList.addAll(list);
+                    fetchedAlbum = true;
+                }
+            }
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "GetUserAlbums : " + error);
+            }
+        });
+    }
+
+    private void getUserArtists(String token){
+        spotifyAPI = new SpotifyAPI(this, token);
+        spotifyAPI.getUserArtists(new SpotifyAPI.SpotifyAPICallback() {
+            @Override
+            public void onSuccess(List<MusicModel> list) {
+                if(list != null && !list.isEmpty()){
+                    musicModelList.addAll(list);
+                    fetchedArtist = true;
+                }
+            }
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "GetUserArtists : " + error);
             }
         });
     }
@@ -116,19 +194,21 @@ public class MusicSelectionList extends AppCompatActivity {
     }
 
     private void applyFilter(){
-        if(filterTypes.size() > 0) {
-            List<MusicModel> list = new ArrayList<>();
+        if(musicModelList != null){
+            if(filterTypes.size() > 0) {
+                List<MusicModel> list = new ArrayList<>();
 
-            musicModelList.forEach((musicModel -> {
-                if(filterTypes.contains(musicModel.getType())){
-                    list.add(musicModel);
-                }
-            }));
+                musicModelList.forEach((musicModel -> {
+                    if(filterTypes.contains(musicModel.getType())){
+                        list.add(musicModel);
+                    }
+                }));
 
-            updateLibrary(list);
-        }
-        else{
-            updateLibrary(musicModelList);
+                updateLibrary(list);
+            }
+            else{
+                updateLibrary(musicModelList);
+            }
         }
     }
 
@@ -175,7 +255,7 @@ public class MusicSelectionList extends AppCompatActivity {
 
         String textType = musicModel.getType().substring(0, 1).toUpperCase() + musicModel.getType().substring(1).toLowerCase();
         if(!Objects.equals(musicModel.getType(), "artist")){
-            textType = textType.concat(" · " + musicModel.getOwnerName());
+            textType = textType.concat(" · " + String.join(", ", musicModel.getOwnerName()));
         }
         tv_type.setText(textType);
 

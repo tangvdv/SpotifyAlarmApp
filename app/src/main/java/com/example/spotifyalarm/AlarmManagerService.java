@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class AlarmManagerService extends Service {
+    private static final String TAG = "AlarmManagerService";
     PendingIntent pendingIntent;
     AlarmManager alarmManager;
     Context context;
@@ -27,7 +28,7 @@ public class AlarmManagerService extends Service {
         super.onStartCommand(intent, flags, startId);
         context = this;
 
-        Log.i("AlarmManagerService", "Service Started");
+        Log.i(TAG, "Service Started");
         setAlarm();
 
         return START_STICKY;
@@ -70,7 +71,7 @@ public class AlarmManagerService extends Service {
 
         createNotification();
 
-        Log.i("AlarmManagerService", "Set alarm : " +
+        Log.i(TAG, "Set alarm : " +
                 new SimpleDateFormat("HH:mm:ss").format(calendar.getTime()) + " ; " + new SimpleDateFormat("HH:mm:ss:SSS").format(Calendar.getInstance().getTime().getTime()));
 
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();

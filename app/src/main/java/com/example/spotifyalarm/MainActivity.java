@@ -25,6 +25,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
     private Context context;
     private String playlistId;
     private SpotifyAPI spotifyAPI;
@@ -103,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
 
-        builder.setScopes(new String[]{"streaming", "playlist-read-private"});
+        builder.setScopes(getResources().getStringArray(R.array.scopes));
         AuthorizationRequest request = builder.build();
 
         AuthorizationClient.openLoginActivity(this, context.getResources().getInteger(R.integer.request_code) ,request);
@@ -114,22 +116,23 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
             response = AuthorizationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthorizationResponse.Type.TOKEN) {
+                Log.i(TAG, response.getAccessToken());
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("TOKEN", response.getAccessToken());
                 editor.apply();
                 getSpotifyPlaylist(playlistId);
             }
             else{
-                Log.e("MainActivity", "response type wrong");
+                Log.e(TAG, "response type wrong");
             }
         }
         else{
-            Log.e("MainActivity", "request code failed");
+            Log.e(TAG, "request code failed");
         }
     }
 
     private void getSpotifyPlaylist(String playlistId){
-        Log.i("MainActivity", "PlaylistId : "+playlistId);
+        Log.i(TAG, "PlaylistId : "+playlistId);
         if(!playlistId.equals("")){
             spotifyAPI = new SpotifyAPI(this, response.getAccessToken());
             spotifyAPI.getPlaylist(new SpotifyAPI.PlaylistCallBack() {
@@ -140,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(String error) {
-                    Log.e("MainActivity | SpotifyPlaylist", error);
+                    Log.e(TAG, error);
                 }
             }, playlistId);
         }
@@ -148,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setPlaylistLayout(MusicModel playlist){
         binding.textPlaylistName.setText(playlist.getName());
-        binding.textPlaylistOwner.setText(playlist.getOwnerName());
+        binding.textPlaylistOwner.setText(String.join(", ", playlist.getOwnerName()));
         Glide.with(context)
                 .load(playlist.getImage_url())
                 .apply(new RequestOptions()

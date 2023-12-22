@@ -3,6 +3,12 @@
     <string name="client_id">f3e653811983411eb5c8f2a3f55d3af4</string>
     <string name="redirect_uri">http://localhost:8888/callback</string>
     <string name="spotify_api_uri">https://api.spotify.com/v1</string>
+    <string-array name="scopes">
+        <item>streaming</item>
+        <item>playlist-read-private</item>
+        <item>user-library-read</item>
+        <item>user-follow-read</item>
+    </string-array>
 
     <string name="toggle_button_playlist">Playlists</string>
     <string name="toggle_button_album">Albums</string>

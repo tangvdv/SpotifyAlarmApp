@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Map;
 
 public class SpotifyAPI {
-    public interface UserPlaylistsCallBack{
+    private static final String TAG = "SpotifyAPI";
+
+    public interface SpotifyAPICallback{
         void onSuccess(List<MusicModel> musicModelList);
         void onError(String error);
     }
@@ -43,10 +45,10 @@ public class SpotifyAPI {
         this.TOKEN = token;
     }
 
-    public void getUserPlaylist(UserPlaylistsCallBack callback){
+    public void getUserPlaylists(SpotifyAPICallback callback){
         RequestQueue reqQueue = Volley.newRequestQueue(context);
 
-        StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/me/playlists", new Response.Listener<String>() {
+        StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/me/playlists?limit=50", new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try{
@@ -62,18 +64,127 @@ public class SpotifyAPI {
                                 playlist.getString("name"),
                                 playlist.getString("uri"),
                                 images.getString("url"),
-                                owner.getString("display_name"),
-                                playlist.getString("type")
+                                new String[] {owner.getString("display_name")},
+                                "playlist"
                         );
                         musicModelList.add(musicModel);
                     }
 
                     callback.onSuccess(musicModelList);
 
-                    Log.v("SpotifyAPI", "onResponseValid : " + array);
+                    Log.v(TAG, "onResponseValid : " + array);
                 } catch(JSONException e){
                     e.printStackTrace();
-                    Log.e("SpotifyAPI", "onResponseError : " + e);
+                    Log.e(TAG, "onResponseError : " + e);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onError(error.toString());
+            }
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                String auth = "Bearer " + TOKEN;
+                headers.put("Accept", "application/json");
+                headers.put("Content-Type", "application/json");
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };
+        reqQueue.add(request);
+    }
+
+    public void getUserAlbums(SpotifyAPICallback callback){
+        RequestQueue reqQueue = Volley.newRequestQueue(context);
+
+        StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/me/albums?limit=50", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try{
+                    JSONObject obj = new JSONObject(response);
+                    JSONArray array = new JSONArray(obj.getString("items"));
+                    musicModelList = new ArrayList<>(array.length());
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject album = array.getJSONObject(i).getJSONObject("album");
+                        JSONArray artist = album.getJSONArray("artists");
+                        String[] artists_name = new String[artist.length()];
+                        for(int j = 0; j < artist.length(); j++){
+                            artists_name[j] = artist.getJSONObject(j).getString("name");
+                        }
+
+                        JSONObject images = new JSONArray(album.getString("images")).getJSONObject(0);
+                        MusicModel musicModel = new MusicModel(
+                                album.getString("id"),
+                                album.getString("name"),
+                                album.getString("uri"),
+                                images.getString("url"),
+                                artists_name,
+                                "album"
+                        );
+                        musicModelList.add(musicModel);
+                    }
+
+                    callback.onSuccess(musicModelList);
+
+                    Log.v(TAG, "onResponseValid : " + array);
+                } catch(JSONException e){
+                    e.printStackTrace();
+                    Log.e(TAG, "onResponseError : " + e);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onError(error.toString());
+            }
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                String auth = "Bearer " + TOKEN;
+                headers.put("Accept", "application/json");
+                headers.put("Content-Type", "application/json");
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };
+        reqQueue.add(request);
+    }
+
+    public void getUserArtists(SpotifyAPICallback callback){
+        RequestQueue reqQueue = Volley.newRequestQueue(context);
+
+        StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/me/following?type=artist&limit=50", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try{
+                    JSONObject obj = new JSONObject(response);
+                    JSONArray array = new JSONArray(new JSONObject(obj.getString("artists")).getString("items"));
+                    musicModelList = new ArrayList<>(array.length());
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject artist = array.getJSONObject(i);
+
+                        JSONObject images = new JSONArray(artist.getString("images")).getJSONObject(0);
+                        MusicModel musicModel = new MusicModel(
+                                artist.getString("id"),
+                                artist.getString("name"),
+                                artist.getString("uri"),
+                                images.getString("url"),
+                                new String[0],
+                                "artist"
+                        );
+                        musicModelList.add(musicModel);
+                    }
+
+                    callback.onSuccess(musicModelList);
+
+                    Log.v(TAG, "onResponseValid : " + array);
+                } catch(JSONException e){
+                    e.printStackTrace();
+                    Log.e(TAG, "onResponseError : " + e);
                 }
             }
         }, new Response.ErrorListener() {
@@ -97,7 +208,6 @@ public class SpotifyAPI {
 
     public void getPlaylist(PlaylistCallBack callback, String playlistId){
         RequestQueue reqQueue = Volley.newRequestQueue(context);
-        Log.i("SpotifyAPI", context.getString(R.string.spotify_api_uri)+ "/playlists/" + playlistId);
         StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/playlists/" + playlistId, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -110,16 +220,16 @@ public class SpotifyAPI {
                             obj.getString("name"),
                             obj.getString("uri"),
                             images.getString("url"),
-                            owner.getString("display_name"),
+                            new String[] {owner.getString("display_name")},
                             obj.getString("type")
                     );
 
                     callback.onSuccess(musicModel);
 
-                    Log.v("SpotifyAPI", "onResponseValid : " + obj);
+                    Log.v(TAG, "onResponseValid : " + obj);
                 } catch(JSONException e){
                     e.printStackTrace();
-                    Log.e("SpotifyAPI", "onResponseError : " + e);
+                    Log.e(TAG, "onResponseError : " + e);
                 }
             }
         }, new Response.ErrorListener() {

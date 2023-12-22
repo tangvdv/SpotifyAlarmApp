@@ -12,13 +12,15 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 public class MusicService extends Service {
+    private static final String TAG = "MusicService";
+
     SpotifyAppRemote mySpotifyAppRemote;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
 
-        Log.i("MusicService", "MusicService Started");
+        Log.i(TAG, "MusicService Started");
         startActivity();
         return START_STICKY;
     }
@@ -26,7 +28,7 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i("MusicService", "MusicService Destroyed");
+        Log.i(TAG, "MusicService Destroyed");
     }
 
     @Override
@@ -49,7 +51,7 @@ public class MusicService extends Service {
             }
             @Override
             public void onFailure(Throwable throwable) {
-                Log.e("MusicService", throwable.getMessage(), throwable);
+                Log.e(TAG, throwable.getMessage(), throwable);
             }
         });
     }
@@ -57,10 +59,10 @@ public class MusicService extends Service {
     private void play(){
         if(mySpotifyAppRemote != null){
             mySpotifyAppRemote.getPlayerApi().play(AlarmModel.getInstance().getPlaylist_uri());
-            Log.i("MusicService", "Play");
+            Log.i(TAG, "Play");
         }
         else{
-            Log.e("AlarmReceiver", "SpotifyPlayerApi object null");
+            Log.e(TAG, "SpotifyPlayerApi object null");
         }
 
         AlarmModel.getInstance().setPendingIntent(null);

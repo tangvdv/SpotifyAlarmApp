@@ -5,10 +5,10 @@ public class MusicModel {
     private String name;
     private String music_uri;
     private String image_url;
-    private String owner_name;
+    private String[] owner_name;
     private String type;
 
-    public MusicModel(String id, String name, String playlist_uri, String image_url, String owner_name, String type) {
+    public MusicModel(String id, String name, String playlist_uri, String image_url, String[] owner_name, String type) {
         this.id = id;
         this.name = name;
         this.music_uri = playlist_uri;
@@ -47,11 +47,11 @@ public class MusicModel {
         this.image_url = image_url;
     }
 
-    public String getOwnerName() {
+    public String[] getOwnerName() {
         return owner_name;
     }
 
-    public void setOwnerName(String owner_name) {
+    public void setOwnerName(String[] owner_name) {
         this.owner_name = owner_name;
     }
 
