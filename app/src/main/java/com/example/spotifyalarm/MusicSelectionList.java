@@ -2,7 +2,9 @@ package com.example.spotifyalarm;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,10 +26,14 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMusicSelectionListBinding;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -70,6 +76,27 @@ public class MusicSelectionList extends AppCompatActivity {
         bindingManager();
     }
 
+    private void bindingManager(){
+        binding.btnPlaylist.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                updateFilterList("playlist", isChecked);
+            }
+        });
+        binding.btnAlbum.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                updateFilterList("album", isChecked);
+            }
+        });
+        binding.btnArtist.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                updateFilterList("artist", isChecked);
+            }
+        });
+    }
+
     private void getLibrary(String token){
         Thread thread = new Thread() {
             @Override
@@ -104,6 +131,15 @@ public class MusicSelectionList extends AppCompatActivity {
             }
         };
         thread.start();
+    }
+
+    private void updateLibrary(List<MusicModel> musicModelList){
+        binding.libraryLayout.removeAllViews();
+        if(musicModelList.size() > 0){
+            musicModelList.forEach((musicModel -> {
+                binding.libraryLayout.addView(createMusicButton(musicModel));
+            }));
+        }
     }
 
     private void getUserPlaylists(String token){
@@ -157,27 +193,6 @@ public class MusicSelectionList extends AppCompatActivity {
         });
     }
 
-    private void bindingManager(){
-        binding.btnPlaylist.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                updateFilterList("playlist", isChecked);
-            }
-        });
-        binding.btnAlbum.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                updateFilterList("album", isChecked);
-            }
-        });
-        binding.btnArtist.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                updateFilterList("artist", isChecked);
-            }
-        });
-    }
-
     private void updateFilterList(String type, boolean state){
         if(state){
             if(!filterTypes.contains(type)){
@@ -212,22 +227,13 @@ public class MusicSelectionList extends AppCompatActivity {
         }
     }
 
-    private void updateLibrary(List<MusicModel> musicModelList){
-        binding.libraryLayout.removeAllViews();
-        if(musicModelList.size() > 0){
-            musicModelList.forEach((musicModel -> {
-                binding.libraryLayout.addView(createMusicButton(musicModel));
-            }));
-        }
-    }
-
     private FrameLayout createMusicButton(MusicModel musicModel){
         FrameLayout fl = new FrameLayout(context);
         Paris.style(fl).apply(R.style.library_frame_layout);
         fl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onClickLibraryButton(musicModel.getMusicUri());
+                onClickLibraryButton(musicModel);
             }
         });
 
@@ -266,8 +272,33 @@ public class MusicSelectionList extends AppCompatActivity {
         return fl;
     }
 
-    private void onClickLibraryButton(String uri){
-        Toast t = Toast.makeText(context, "uri : "+ uri, Toast.LENGTH_SHORT);
-        t.show();
+    private void onClickLibraryButton(MusicModel musicModel){
+        String data = musicToJsonString(musicModel);
+        if(!Objects.equals(data, "")){
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("Data", data);
+            setResult(Activity.RESULT_OK, resultIntent);
+        }
+        else{
+            setResult(Activity.RESULT_CANCELED);
+        }
+
+        finish();
+    }
+
+    private String musicToJsonString(MusicModel musicModel){
+        Map<String, String> music = new HashMap<>();
+        music.put("image", musicModel.getImage_url());
+        music.put("name", musicModel.getName());
+        String type = musicModel.getType().substring(0, 1).toUpperCase() + musicModel.getType().substring(1).toLowerCase();
+        if(!Objects.equals(musicModel.getType(), "artist")){
+            type = type.concat(" · " + String.join(", ", musicModel.getOwnerName()));
+        }
+        music.put("type", type);
+        music.put("uri", musicModel.getMusicUri());
+
+        JSONObject jsonMusic = new JSONObject(music);
+
+        return jsonMusic.toString();
     }
 }

@@ -1,7 +1,14 @@
 package com.example.spotifyalarm;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,27 +28,46 @@ import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     private Context context;
-    private String playlistId;
-    private SpotifyAPI spotifyAPI;
-
     private ActivityMainBinding binding;
     private MaterialTimePicker timePicker;
     private Calendar calendar;
     private Intent alarmServiceIntent;
-
     private SharedPreferences sharedPreferences;
-
     private int hour;
     private int minute;
 
-    private AuthorizationResponse response;
+    private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent data = result.getData();
+                        if(data != null && data.getExtras() != null){
+                            String music =  data.getStringExtra("Data");
+                            if(!Objects.equals(music, "")){
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("music", music);
+                                editor.apply();
+                            }
+
+                            getMusicData();
+                        }
+                    }
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,8 +86,8 @@ public class MainActivity extends AppCompatActivity {
 
         hour = sharedPreferences.getInt("time_hour", 0);
         minute = sharedPreferences.getInt("time_minute", 0);
-        playlistId = sharedPreferences.getString("playlistId", "");
 
+        getMusicData();
         setCalendar();
 
         binding.setAlarmSwitch.setChecked(
@@ -96,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(context, MusicSelectionList.class);
-                startActivity(intent);
+                musicActivityResult.launch(intent);
             }
         });
     }
@@ -114,54 +140,50 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
-            response = AuthorizationClient.getResponse(resultCode, intent);
+            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthorizationResponse.Type.TOKEN) {
                 Log.i(TAG, response.getAccessToken());
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("TOKEN", response.getAccessToken());
                 editor.apply();
-                getSpotifyPlaylist(playlistId);
             }
-            else{
-                Log.e(TAG, "response type wrong");
+        }
+    }
+
+    private void getMusicData(){
+        HashMap<String, String> music = new HashMap<>();
+        try {
+            String data = sharedPreferences.getString("music", "");
+            if(!Objects.equals(data, "")){
+                JSONObject jsonData = new JSONObject(data);
+
+                music.put("image", jsonData.getString("image"));
+                music.put("name", jsonData.getString("name"));
+                music.put("type", jsonData.getString("type"));
+                AlarmModel.getInstance().setPlaylist_uri(jsonData.getString("uri"));
             }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        setPlaylistLayout(music);
+    }
+
+    private void setPlaylistLayout(HashMap<String, String> data){
+        if(data != null && !data.isEmpty()){
+            binding.textPlaylistName.setText(data.get("name"));
+            binding.textPlaylistOwner.setText(data.get("type"));
+            Glide.with(context)
+                    .load(data.get("image"))
+                    .apply(new RequestOptions()
+                            .transform(new CenterCrop(), new RoundedCorners(10))
+                    )
+                    .into(binding.imagePlaylist);
         }
         else{
-            Log.e(TAG, "request code failed");
+            binding.textPlaylistName.setText("Select music");
         }
-    }
-
-    private void getSpotifyPlaylist(String playlistId){
-        Log.i(TAG, "PlaylistId : "+playlistId);
-        if(!playlistId.equals("")){
-            spotifyAPI = new SpotifyAPI(this, response.getAccessToken());
-            spotifyAPI.getPlaylist(new SpotifyAPI.PlaylistCallBack() {
-                @Override
-                public void onSuccess(MusicModel musicModel) {
-                    setPlaylistLayout(musicModel);
-                }
-
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, error);
-                }
-            }, playlistId);
-        }
-    }
-
-    private void setPlaylistLayout(MusicModel playlist){
-        binding.textPlaylistName.setText(playlist.getName());
-        binding.textPlaylistOwner.setText(String.join(", ", playlist.getOwnerName()));
-        Glide.with(context)
-                .load(playlist.getImage_url())
-                .apply(new RequestOptions()
-                        .transform(new CenterCrop(), new RoundedCorners(10))
-                )
-                .into(binding.imagePlaylist);
-    }
-
-    private void selectPlaylist(String playlistUri){
-        AlarmModel.getInstance().setPlaylist_uri(playlistUri);
     }
 
     private void selectTime(){

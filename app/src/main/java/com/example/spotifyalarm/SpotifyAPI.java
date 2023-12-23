@@ -22,23 +22,13 @@ import java.util.Map;
 
 public class SpotifyAPI {
     private static final String TAG = "SpotifyAPI";
+    private final String TOKEN;
+    Context context;
 
     public interface SpotifyAPICallback{
         void onSuccess(List<MusicModel> musicModelList);
         void onError(String error);
     }
-
-    public interface PlaylistCallBack{
-        void onSuccess(MusicModel musicModel);
-
-        void onError(String error);
-    }
-
-    private String TOKEN;
-
-    List<MusicModel> musicModelList;
-
-    Context context;
 
     public SpotifyAPI(Context context, String token){
         this.context = context;
@@ -54,7 +44,7 @@ public class SpotifyAPI {
                 try{
                     JSONObject obj = new JSONObject(response);
                     JSONArray array = new JSONArray(obj.getString("items"));
-                    musicModelList = new ArrayList<>(array.length());
+                    List<MusicModel> musicModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject playlist = array.getJSONObject(i);
                         JSONObject owner = playlist.getJSONObject("owner");
@@ -106,7 +96,7 @@ public class SpotifyAPI {
                 try{
                     JSONObject obj = new JSONObject(response);
                     JSONArray array = new JSONArray(obj.getString("items"));
-                    musicModelList = new ArrayList<>(array.length());
+                    List<MusicModel> musicModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject album = array.getJSONObject(i).getJSONObject("album");
                         JSONArray artist = album.getJSONArray("artists");
@@ -163,7 +153,7 @@ public class SpotifyAPI {
                 try{
                     JSONObject obj = new JSONObject(response);
                     JSONArray array = new JSONArray(new JSONObject(obj.getString("artists")).getString("items"));
-                    musicModelList = new ArrayList<>(array.length());
+                    List<MusicModel> musicModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject artist = array.getJSONObject(i);
 
@@ -182,51 +172,6 @@ public class SpotifyAPI {
                     callback.onSuccess(musicModelList);
 
                     Log.v(TAG, "onResponseValid : " + array);
-                } catch(JSONException e){
-                    e.printStackTrace();
-                    Log.e(TAG, "onResponseError : " + e);
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                callback.onError(error.toString());
-            }
-        }){
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                Map<String, String> headers = new HashMap<>();
-                String auth = "Bearer " + TOKEN;
-                headers.put("Accept", "application/json");
-                headers.put("Content-Type", "application/json");
-                headers.put("Authorization", auth);
-                return headers;
-            }
-        };
-        reqQueue.add(request);
-    }
-
-    public void getPlaylist(PlaylistCallBack callback, String playlistId){
-        RequestQueue reqQueue = Volley.newRequestQueue(context);
-        StringRequest request = new StringRequest(Request.Method.GET, context.getString(R.string.spotify_api_uri)+ "/playlists/" + playlistId, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try{
-                    JSONObject obj = new JSONObject(response);
-                    JSONObject owner = new JSONObject(obj.getString("owner"));
-                    JSONObject images = new JSONArray(obj.getString("images")).getJSONObject(0);
-                    MusicModel musicModel = new MusicModel(
-                            obj.getString("id"),
-                            obj.getString("name"),
-                            obj.getString("uri"),
-                            images.getString("url"),
-                            new String[] {owner.getString("display_name")},
-                            obj.getString("type")
-                    );
-
-                    callback.onSuccess(musicModel);
-
-                    Log.v(TAG, "onResponseValid : " + obj);
                 } catch(JSONException e){
                     e.printStackTrace();
                     Log.e(TAG, "onResponseError : " + e);
