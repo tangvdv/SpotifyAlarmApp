@@ -1,80 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MusicSelectionList"
-    android:background="@color/dark_grey"
-    android:orientation="vertical">
+    tools:context=".MusicLibraryActivity"
+    android:background="@color/dark_grey">
 
-    <RadioGroup
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal" >
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_margin="10dp">
 
-        <ToggleButton
-            android:id="@+id/btnPlaylist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:background="@drawable/toggle_button_background"
-            android:textColor="@drawable/toggle_button_text"
-            android:textOff="@string/toggle_button_playlist"
-            android:textOn="@string/toggle_button_playlist"
-            android:textSize="12dp"/>
-
-        <ToggleButton
-            android:id="@+id/btnAlbum"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:background="@drawable/toggle_button_background"
-            android:textColor="@drawable/toggle_button_text"
-            android:textOff="@string/toggle_button_album"
-            android:textOn="@string/toggle_button_album"
-            android:textSize="12dp"/>
-
-        <ToggleButton
-            android:id="@+id/btnArtist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:background="@drawable/toggle_button_background"
-            android:textColor="@drawable/toggle_button_text"
-            android:textOff="@string/toggle_button_artist"
-            android:textOn="@string/toggle_button_artist"
-            android:textSize="12dp"/>
-    </RadioGroup>
-
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <ScrollView
+        <RadioGroup
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fillViewport="true"
-            android:padding="10dp" >
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal" >
 
-            <LinearLayout
-                android:id="@+id/libraryLayout"
+            <ToggleButton
+                android:id="@+id/btnPlaylist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/toggle_button_background"
+                android:textColor="@drawable/toggle_button_text"
+                android:textOff="@string/toggle_button_playlist"
+                android:textOn="@string/toggle_button_playlist"
+                android:textSize="12dp"/>
+
+            <ToggleButton
+                android:id="@+id/btnAlbum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/toggle_button_background"
+                android:textColor="@drawable/toggle_button_text"
+                android:textOff="@string/toggle_button_album"
+                android:textOn="@string/toggle_button_album"
+                android:textSize="12dp"/>
+
+            <ToggleButton
+                android:id="@+id/btnArtist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@drawable/toggle_button_background"
+                android:textColor="@drawable/toggle_button_text"
+                android:textOff="@string/toggle_button_artist"
+                android:textOn="@string/toggle_button_artist"
+                android:textSize="12dp"/>
+        </RadioGroup>
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
-            </LinearLayout>
-        </ScrollView>
+                android:fillViewport="true"
+                android:padding="10dp" >
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:visibility="gone"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"/>
+                <LinearLayout
+                    android:id="@+id/libraryLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+                </LinearLayout>
+            </ScrollView>
 
-    </RelativeLayout>
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:visibility="gone"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"/>
 
-</LinearLayout>
+        </RelativeLayout>
+
+    </LinearLayout>
+</RelativeLayout>

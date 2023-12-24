@@ -16,7 +16,7 @@
         android:theme="@style/Theme.SpotifyAlarm"
         tools:targetApi="31">
         <activity
-            android:name=".MusicSelectionList"
+            android:name=".MusicLibraryActivity"
             android:exported="false" />
 
         <service

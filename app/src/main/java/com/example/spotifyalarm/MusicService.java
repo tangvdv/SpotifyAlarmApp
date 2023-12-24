@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 public class MusicService extends Service {
@@ -57,8 +58,9 @@ public class MusicService extends Service {
     }
 
     private void play(){
-        if(mySpotifyAppRemote != null){
-            mySpotifyAppRemote.getPlayerApi().play(AlarmModel.getInstance().getPlaylist_uri());
+        String uri = AlarmModel.getInstance().getPlaylist_uri();
+        if(mySpotifyAppRemote != null && !uri.equals("")){
+            mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
             Log.i(TAG, "Play");
         }
         else{

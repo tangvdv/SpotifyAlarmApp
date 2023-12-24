@@ -7,9 +7,10 @@ import java.util.Calendar;
 
 public class AlarmModel {
     private static AlarmModel instance;
-    PendingIntent pendingIntent;
-    Calendar calendar;
-    String playlist_uri;
+    private PendingIntent pendingIntent;
+    private Calendar calendar;
+    private String playlist_uri;
+    private boolean state;
 
     private AlarmModel(){}
 
@@ -42,5 +43,13 @@ public class AlarmModel {
 
     public void setPlaylist_uri(String playlist_uri) {
         this.playlist_uri = playlist_uri;
+    }
+
+    public boolean isState() {
+        return state;
+    }
+
+    public void setState(boolean state) {
+        this.state = state;
     }
 }

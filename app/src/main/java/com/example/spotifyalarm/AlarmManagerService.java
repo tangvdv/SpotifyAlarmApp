@@ -84,13 +84,14 @@ public class AlarmManagerService extends Service {
             }
             alarmManager.cancel(pendingIntent);
             AlarmModel.getInstance().setPendingIntent(null);
+            AlarmModel.getInstance().setState(false);
             Toast.makeText(this, "Alarm Canceled", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
     public void onDestroy() {
-        if(AlarmModel.getInstance().getPendingIntent() != null){
+        if(AlarmModel.getInstance().isState()){
             startService(new Intent(this, AlarmManagerService.class));
         }
         else{

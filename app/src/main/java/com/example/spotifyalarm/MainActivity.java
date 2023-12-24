@@ -3,9 +3,7 @@ package com.example.spotifyalarm;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
@@ -80,21 +78,23 @@ public class MainActivity extends AppCompatActivity {
 
         alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
-        context = this;
-
-        startActivity();
-
         hour = sharedPreferences.getInt("time_hour", 0);
         minute = sharedPreferences.getInt("time_minute", 0);
 
+        context = this;
+
+        startSpotifyActivity();
+        setupActivityViews();
+    }
+
+    private void setupActivityViews(){
+        bindingManager();
+
         getMusicData();
         setCalendar();
+        alarmTextState();
 
-        binding.setAlarmSwitch.setChecked(
-                (AlarmModel.getInstance().getPendingIntent() != null)
-        );
-
-        bindingManager();
+        binding.setAlarmSwitch.setChecked( AlarmModel.getInstance().isState() );
     }
 
     private void bindingManager(){
@@ -109,25 +109,28 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
+                    AlarmModel.getInstance().setState(true);
                     startForegroundService(alarmServiceIntent);
                 }
                 else{
-                    AlarmModel.getInstance().setPendingIntent(null);
+                    AlarmModel.getInstance().setState(false);
                     stopService(alarmServiceIntent);
                 }
+
+                alarmTextState();
             }
         });
 
         binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(context, MusicSelectionList.class);
+                Intent intent = new Intent(context, MusicLibraryActivity.class);
                 musicActivityResult.launch(intent);
             }
         });
     }
 
-    private void startActivity(){
+    private void startSpotifyActivity(){
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
 
@@ -208,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
 
                 setCalendar();
 
-                if(AlarmModel.getInstance().getPendingIntent() != null){
+                if(AlarmModel.getInstance().isState()){
                     startService(alarmServiceIntent);
                 }
             }
@@ -227,14 +230,63 @@ public class MainActivity extends AppCompatActivity {
 
         AlarmModel.getInstance().setCalendar(calendar);
 
-        setAlarmTextDate(calendar);
+        alarmTextValue();
     }
 
-    private void setAlarmTextDate(Calendar calendar){
+    private void alarmTextValue(){
         if(calendar != null) {
-            binding.btnSetTime.setText(new SimpleDateFormat("HH:mm").format(calendar.getTime()));
+            binding.alarmTimeText.setText(new SimpleDateFormat("HH:mm").format(calendar.getTime()));
             binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(calendar.getTime()));
+        }else{
+            binding.alarmTimeText.setVisibility(View.GONE);
+            binding.alarmDateText.setVisibility(View.GONE);
         }
+    }
+
+    private void alarmTextState(){
+        if(AlarmModel.getInstance().isState()){
+            binding.alarmTimeText.setTextColor(getResources().getColor(R.color.white));
+            binding.alarmDateText.setTextColor(getResources().getColor(R.color.white));
+            binding.alarmTimeLeftText.setVisibility(View.VISIBLE);
+            alarmTimeLeftThread();
+        }
+        else{
+            binding.alarmTimeText.setTextColor(getResources().getColor(R.color.light_grey));
+            binding.alarmDateText.setTextColor(getResources().getColor(R.color.light_grey));
+            binding.alarmTimeLeftText.setVisibility(View.GONE);
+        }
+    }
+
+    private void alarmTimeLeftThread(){
+        Thread timeLeftThread = new Thread() {
+            @Override
+            public void run() {
+                while(AlarmModel.getInstance().isState()) {
+                    try {
+                        Log.i(TAG, "Tick");
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - calendar.getTimeInMillis());
+
+                                long hours = diffInMillies / (60 * 60 * 1000);
+                                long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
+
+                                String timeLeft = String.format("%02d:%02d", hours, minutes);
+                                binding.alarmTimeLeftText.setText("Alarm in : " + timeLeft);
+                            }
+                        });
+
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
+
+        timeLeftThread.start();
     }
 
     @Override

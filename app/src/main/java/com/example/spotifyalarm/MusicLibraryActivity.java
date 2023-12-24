@@ -7,17 +7,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.airbnb.paris.Paris;
 import com.bumptech.glide.Glide;
@@ -29,20 +26,13 @@ import com.example.spotifyalarm.databinding.ActivityMusicSelectionListBinding;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class MusicSelectionList extends AppCompatActivity {
-    private static final String TAG = "MusicSelectionList";
+public class MusicLibraryActivity extends AppCompatActivity {
+    private static final String TAG = "MusicLibraryActivity";
 
     private Context context;
     private ActivityMusicSelectionListBinding binding;
@@ -58,8 +48,6 @@ public class MusicSelectionList extends AppCompatActivity {
         context = this;
         binding = ActivityMusicSelectionListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        Log.i(TAG, "onCreate");
 
         filterTypes = new ArrayList<>(3);
         musicModelList = new ArrayList<>();
