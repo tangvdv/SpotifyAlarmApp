@@ -11,7 +11,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="10dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
         android:orientation="vertical">
 
         <RelativeLayout
@@ -27,7 +30,7 @@
                 android:layout_marginRight="50dp"
                 android:backgroundTint="@color/grey"
                 app:cornerRadius="10dp" />
-            
+
             <ImageView
                 android:id="@+id/imagePlaylist"
                 android:layout_width="80dp"
@@ -45,8 +48,8 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginStart="150dp"
                 android:layout_marginTop="30dp"
-                android:layout_marginBottom="40dp"
                 android:layout_marginEnd="60dp"
+                android:layout_marginBottom="40dp"
                 android:textColor="@color/white" />
 
             <TextView
@@ -56,64 +59,94 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginStart="150dp"
                 android:layout_marginTop="50dp"
-                android:layout_marginBottom="30dp"
                 android:layout_marginEnd="60dp"
+                android:layout_marginBottom="30dp"
                 android:textColor="@color/light_grey" />
 
         </RelativeLayout>
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="100dp"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="30dp" >
+            android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btnSetTime"
+            <RelativeLayout
                 android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_weight="1">
+
+                <Button
+                    android:id="@+id/btnSetTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:backgroundTint="@color/grey"
+                    app:cornerRadius="10dp" />
+
+                <Switch
+                    android:id="@+id/setAlarmSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="5dp" />
+
+                <TextView
+                    android:id="@+id/alarmTimeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_margin="5dp"
+                    android:textColor="@color/light_grey"
+                    android:textSize="20dp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/alarmDateText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/alarmTimeText"
+                    android:layout_alignParentTop="true"
+                    android:layout_margin="10dp"
+                    android:textColor="@color/light_grey"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/alarmTimeLeftText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/alarmTimeText"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    android:visibility="gone" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="10dp"
                 android:layout_height="match_parent"
-                android:backgroundTint="@color/grey"
-                app:cornerRadius="10dp" />
+                android:visibility="invisible"/>
 
-            <Switch
-                android:id="@+id/setAlarmSwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginRight="5dp"
-                android:layout_centerVertical="true"/>
 
-            <TextView
-                android:id="@+id/alarmTimeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="20dp"
-                android:textColor="@color/light_grey"
-                android:textStyle="bold"
-                android:layout_centerHorizontal="true"
-                android:layout_margin="5dp"/>
+            <RelativeLayout
+                android:layout_width="55dp"
+                android:layout_height="60dp">
 
-            <TextView
-                android:id="@+id/alarmDateText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="11sp"
-                android:layout_alignParentTop="true"
-                android:layout_margin="10dp"
-                android:textColor="@color/light_grey"
-                android:layout_below="@id/alarmTimeText" />
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:cornerRadius="10dp"
+                    android:backgroundTint="@color/grey"/>
 
-            <TextView
-                android:visibility="gone"
-                android:id="@+id/alarmTimeLeftText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:layout_centerHorizontal="true"
-                android:layout_below="@+id/alarmTimeText"
-                android:textSize="11sp" />
-        </RelativeLayout>
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/settings"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    app:tint="@color/light_grey" />
+            </RelativeLayout>
+        </LinearLayout>
 
     </LinearLayout>
 </RelativeLayout>

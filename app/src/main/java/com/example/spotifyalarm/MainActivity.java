@@ -150,9 +150,14 @@ public class MainActivity extends AppCompatActivity {
                 editor.putString("TOKEN", response.getAccessToken());
                 editor.apply();
             }
+            else{
+                Log.e(TAG, "Response error : "+response.getError());
+            }
+        }
+        else{
+            Log.e(TAG, "Wrong request code : "+requestCode);
         }
     }
-
     private void getMusicData(){
         HashMap<String, String> music = new HashMap<>();
         try {
