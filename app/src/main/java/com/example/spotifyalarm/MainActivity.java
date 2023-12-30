@@ -200,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
                 .setHour(hour)
                 .setMinute(minute)
                 .setTitleText("Select Alarm Time")
+                .setTheme(R.style.ThemeOverlay_App_MaterialTimePicker)
                 .build();
 
 
