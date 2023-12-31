@@ -128,6 +128,14 @@ public class MainActivity extends AppCompatActivity {
                 musicActivityResult.launch(intent);
             }
         });
+
+        binding.btnSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context, SettingsActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     private void startSpotifyActivity(){
