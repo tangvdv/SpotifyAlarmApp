@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        sharedPreferences = this.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
 
         alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 

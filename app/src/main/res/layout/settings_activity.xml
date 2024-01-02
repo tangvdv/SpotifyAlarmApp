@@ -82,6 +82,16 @@
             android:layout_height="50dp"
             android:visibility="invisible"/>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Alarm"
+            android:textColor="@color/white"
+            android:textSize="25dp"
+            android:layout_marginVertical="10dp"
+            android:textAlignment="center"/>
+
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="60dp">
@@ -116,19 +126,28 @@
             android:layout_height="10dp"
             android:visibility="invisible"/>
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Music"
+            android:textColor="@color/white"
+            android:textSize="25dp"
+            android:layout_marginVertical="10dp"
+            android:textAlignment="center"/>
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="60dp">
 
             <Button
-                android:id="@+id/btnSuffleSettings"
+                android:id="@+id/btnShuffleSettings"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:backgroundTint="@color/grey"
                 app:cornerRadius="10dp" />
 
             <Switch
-                android:id="@+id/switchSuffleSettings"
+                android:id="@+id/switchShuffleSettings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
@@ -144,6 +163,34 @@
                 android:textColor="@color/white"
                 android:textSize="20dp" />
         </RelativeLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:visibility="invisible"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sound volume"
+                android:textColor="@color/white"
+                android:textSize="20dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginBottom="5dp" />
+
+            <androidx.appcompat.widget.AppCompatSeekBar
+                android:id="@+id/seekBarSoundVolume"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:splitTrack="false"
+                android:thumb="@color/null_"
+                android:progressDrawable="@drawable/seekbar_progress" />
+        </LinearLayout>
 
     </LinearLayout>
 </RelativeLayout>
