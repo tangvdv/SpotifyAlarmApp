@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         getMusicData();
         setCalendar();
-        alarmTextState();
+        alarmBindingState();
 
         binding.setAlarmSwitch.setChecked( AlarmModel.getInstance().isState() );
     }
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                     stopService(alarmServiceIntent);
                 }
 
-                alarmTextState();
+                alarmBindingState();
             }
         });
 
@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthorizationResponse.Type.TOKEN) {
+                Log.i(TAG, String.valueOf(response.getExpiresIn()));
                 Log.i(TAG, response.getAccessToken());
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("TOKEN", response.getAccessToken());
@@ -257,7 +258,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void alarmTextState(){
+    private void alarmBindingState(){
+        binding.setAlarmSwitch.setChecked(AlarmModel.getInstance().isState());
         if(AlarmModel.getInstance().isState()){
             binding.alarmTimeText.setTextColor(getResources().getColor(R.color.white));
             binding.alarmDateText.setTextColor(getResources().getColor(R.color.white));
@@ -277,25 +279,33 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 while(AlarmModel.getInstance().isState()) {
                     try {
-                        Log.i(TAG, "Tick");
+                            Log.i(TAG, "Tick");
 
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - calendar.getTimeInMillis());
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - calendar.getTimeInMillis());
 
-                                long hours = diffInMillies / (60 * 60 * 1000);
-                                long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
+                                    long hours = diffInMillies / (60 * 60 * 1000);
+                                    long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
 
-                                String timeLeft = String.format("%02d:%02d", hours, minutes);
-                                binding.alarmTimeLeftText.setText("Alarm in : " + timeLeft);
-                            }
-                        });
+                                    String timeLeft = String.format("%02d:%02d", hours, minutes);
+                                    binding.alarmTimeLeftText.setText("Alarm in : " + timeLeft);
+                                }
+                            });
 
-                        sleep(1000);
+                            sleep(1000);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
+                }
+                if(!AlarmModel.getInstance().isState()){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            alarmBindingState();
+                        }
+                    });
                 }
             }
         };

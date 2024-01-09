@@ -52,7 +52,7 @@ public class MusicLibraryActivity extends AppCompatActivity {
         filterTypes = new ArrayList<>(3);
         musicModelList = new ArrayList<>();
 
-        SharedPreferences sharedPreferences = this.getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
         String token = sharedPreferences.getString("TOKEN", null);
         if(token != null){
            getLibrary(token);

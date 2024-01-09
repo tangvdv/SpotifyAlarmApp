@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -67,6 +68,10 @@ public class AlarmManagerService extends Service {
 
         Calendar calendar = AlarmModel.getInstance().getCalendar();
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms();
+        }
+
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
 
         createNotification();
@@ -75,6 +80,8 @@ public class AlarmManagerService extends Service {
                 new SimpleDateFormat("HH:mm:ss").format(calendar.getTime()) + " ; " + new SimpleDateFormat("HH:mm:ss:SSS").format(Calendar.getInstance().getTime().getTime()));
 
         Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
+
+        AlarmModel.getInstance().setState(true);
     }
 
     public void cancelAlarm(){

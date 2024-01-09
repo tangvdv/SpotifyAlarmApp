@@ -16,6 +16,7 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Calendar;
 import java.util.Objects;
 
 public class MusicService extends Service {
@@ -27,7 +28,11 @@ public class MusicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
 
-        startActivity();
+        if(AlarmModel.getInstance().isState()) {
+            AlarmModel.getInstance().setState(false);
+            startActivity();
+        }
+
         return START_STICKY;
     }
 
@@ -57,7 +62,7 @@ public class MusicService extends Service {
     }
 
     private void play(){
-        setSettings();
+        applySettings();
         String uri = AlarmModel.getInstance().getPlaylist_uri();
         if(mySpotifyAppRemote != null && !uri.equals("")){
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
@@ -67,12 +72,10 @@ public class MusicService extends Service {
             Log.e(TAG, "SpotifyPlayerApi object null");
         }
 
-        AlarmModel.getInstance().setPendingIntent(null);
-        stopService(new Intent(this, AlarmManagerService.class));
         this.stopSelf();
     }
 
-    private void setSettings(){
+    private void applySettings(){
         try {
             SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
             String data = sharedPreferences.getString("settings", "");
@@ -82,12 +85,18 @@ public class MusicService extends Service {
                 mySpotifyAppRemote.getPlayerApi().setShuffle(Boolean.parseBoolean(jsonData.getString("shuffle")));
 
                 if(Boolean.parseBoolean(jsonData.getString("repeat"))){
+                    Log.i(TAG, "Alarm repeat set");
                     Intent alarmServiceIntent = new Intent(this, AlarmManagerService.class);
+
+                    Calendar calendar = AlarmModel.getInstance().getCalendar();
+                    calendar.add(Calendar.DATE, 1);
+                    AlarmModel.getInstance().setCalendar(calendar);
+
                     startForegroundService(alarmServiceIntent);
-                };
+                }
 
                 AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-                am.setStreamVolume(AudioManager.STREAM_MUSIC, jsonData.getInt("volume"), 0);
+                am.setStreamVolume(AudioManager.STREAM_ALARM, jsonData.getInt("volume"), 0);
 
                 mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
             }
