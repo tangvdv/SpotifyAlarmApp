@@ -2,15 +2,22 @@ package com.example.spotifyalarm;
 
 import android.app.PendingIntent;
 import android.provider.CalendarContract;
+import android.util.Log;
 
+import com.spotify.android.appremote.api.SpotifyAppRemote;
+
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AlarmModel {
     private static AlarmModel instance;
-    private PendingIntent pendingIntent;
     private Calendar calendar;
     private String playlist_uri;
     private boolean state;
+
+    private SpotifyAppRemote spotifyAppRemote;
 
     private AlarmModel(){}
 
@@ -19,14 +26,6 @@ public class AlarmModel {
             instance = new AlarmModel();
         }
         return instance;
-    }
-
-    public PendingIntent getPendingIntent() {
-        return pendingIntent;
-    }
-
-    public void setPendingIntent(PendingIntent pendingIntent) {
-        this.pendingIntent = pendingIntent;
     }
 
     public Calendar getCalendar() {
@@ -51,5 +50,24 @@ public class AlarmModel {
 
     public void setState(boolean state) {
         this.state = state;
+    }
+
+    public SpotifyAppRemote getSpotifyAppRemote() {
+        return spotifyAppRemote;
+    }
+
+    public void setSpotifyAppRemote(SpotifyAppRemote spotifyAppRemote) {
+        this.spotifyAppRemote = spotifyAppRemote;
+    }
+
+    public HashMap<String, String> getAlarmModelContent(){
+        HashMap<String, String> AlarmMap = new HashMap<String, String>();
+        AlarmMap.put("Calendar", new SimpleDateFormat("HH:mm:ss").format(this.calendar.getTime()));
+        AlarmMap.put("PlaylistUri", this.playlist_uri );
+        AlarmMap.put("State", String.valueOf(this.state) );
+        if(this.spotifyAppRemote != null)
+            AlarmMap.put("SpotifyAppRemote", String.valueOf(this.spotifyAppRemote.getConnectApi()) );
+
+        return AlarmMap;
     }
 }

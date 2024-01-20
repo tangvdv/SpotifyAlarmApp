@@ -8,8 +8,6 @@ import android.media.AudioManager;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
@@ -24,13 +22,20 @@ public class MusicService extends Service {
 
     SpotifyAppRemote mySpotifyAppRemote;
 
+    LogFile logFile;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
-
+        logFile = new LogFile(this);
+        mySpotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
         if(AlarmModel.getInstance().isState()) {
+            logFile.writeToFile(TAG, "Service started, alarm is on");
             AlarmModel.getInstance().setState(false);
-            startActivity();
+            play();
+        }
+        else{
+            logFile.writeToFile(TAG, "Service started, alarm is off");
         }
 
         return START_STICKY;
@@ -41,42 +46,29 @@ public class MusicService extends Service {
         return null;
     }
 
-    private void startActivity(){
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(this.getString(R.string.client_id))
-                        .setRedirectUri(this.getString(R.string.redirect_uri))
-                        .showAuthView(true)
-                        .build();
-
-        SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
-            @Override
-            public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                mySpotifyAppRemote = spotifyAppRemote;
-                play();
-            }
-            @Override
-            public void onFailure(Throwable throwable) {
-                Log.e(TAG, throwable.getMessage(), throwable);
-            }
-        });
-    }
-
     private void play(){
         applySettings();
         String uri = AlarmModel.getInstance().getPlaylist_uri();
         if(mySpotifyAppRemote != null && !uri.equals("")){
+            logFile.writeToFile(TAG, "Alarm trigger");
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
             Log.i(TAG, "Play");
         }
         else{
             Log.e(TAG, "SpotifyPlayerApi object null");
+            logFile.writeToFile(TAG, "SpotifyPlayerApi object null");
         }
 
+        logFile.writeToFile(TAG, "Service stop");
+
+        AlarmModel.getInstance().setState(false);
+        stopService(new Intent(this, AlarmManagerService.class));
         this.stopSelf();
     }
 
     private void applySettings(){
         try {
+            logFile.writeToFile(TAG, "Apply settings");
             SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
             String data = sharedPreferences.getString("settings", "");
             if(!Objects.equals(data, "")){
@@ -99,6 +91,7 @@ public class MusicService extends Service {
                 am.setStreamVolume(AudioManager.STREAM_ALARM, jsonData.getInt("volume"), 0);
 
                 mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
+                mySpotifyAppRemote.getPlayerApi().skipNext();
             }
 
         } catch (JSONException e) {

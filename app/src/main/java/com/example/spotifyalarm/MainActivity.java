@@ -109,15 +109,31 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
-                    AlarmModel.getInstance().setState(true);
-                    startForegroundService(alarmServiceIntent);
+                    startService(alarmServiceIntent);
                 }
                 else{
-                    AlarmModel.getInstance().setState(false);
                     stopService(alarmServiceIntent);
                 }
 
-                alarmBindingState();
+                Thread thread = new Thread() {
+                    @Override
+                    public void run() {
+                        while(b != AlarmModel.getInstance().isState()) {
+                            try {
+                                sleep(100);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                alarmBindingState();
+                            }
+                        });
+                    }
+                };
+                thread.start();
             }
         });
 
@@ -277,35 +293,26 @@ public class MainActivity extends AppCompatActivity {
         Thread timeLeftThread = new Thread() {
             @Override
             public void run() {
-                while(AlarmModel.getInstance().isState()) {
+                while(!MainActivity.this.isDestroyed() && AlarmModel.getInstance().isState()) {
                     try {
-                            Log.i(TAG, "Tick");
+                        Log.i(TAG, "Tick");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - calendar.getTimeInMillis());
 
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - calendar.getTimeInMillis());
+                                long hours = diffInMillies / (60 * 60 * 1000);
+                                long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
 
-                                    long hours = diffInMillies / (60 * 60 * 1000);
-                                    long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
+                                String timeLeft = String.format("%02d:%02d", hours, minutes);
+                                binding.alarmTimeLeftText.setText("Alarm in : " + timeLeft);
+                            }
+                        });
 
-                                    String timeLeft = String.format("%02d:%02d", hours, minutes);
-                                    binding.alarmTimeLeftText.setText("Alarm in : " + timeLeft);
-                                }
-                            });
-
-                            sleep(1000);
+                        sleep(1000);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
-                }
-                if(!AlarmModel.getInstance().isState()){
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            alarmBindingState();
-                        }
-                    });
                 }
             }
         };
@@ -316,6 +323,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         AuthorizationClient.stopLoginActivity(this, context.getResources().getInteger(R.integer.request_code));
+        Log.i(TAG, "Closed !");
         super.onDestroy();
     }
 }
