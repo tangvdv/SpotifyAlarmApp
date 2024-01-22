@@ -65,6 +65,7 @@ public class SpotifyAPI {
                     Log.v(TAG, "onResponseValid : " + array);
                 } catch(JSONException e){
                     e.printStackTrace();
+                    callback.onError(e.toString());
                     Log.e(TAG, "onResponseError : " + e);
                 }
             }
@@ -122,6 +123,7 @@ public class SpotifyAPI {
                     Log.v(TAG, "onResponseValid : " + array);
                 } catch(JSONException e){
                     e.printStackTrace();
+                    callback.onError(e.toString());
                     Log.e(TAG, "onResponseError : " + e);
                 }
             }
@@ -174,6 +176,7 @@ public class SpotifyAPI {
                     Log.v(TAG, "onResponseValid : " + array);
                 } catch(JSONException e){
                     e.printStackTrace();
+                    callback.onError(e.toString());
                     Log.e(TAG, "onResponseError : " + e);
                 }
             }

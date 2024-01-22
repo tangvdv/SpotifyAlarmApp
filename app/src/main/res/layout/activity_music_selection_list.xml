@@ -80,6 +80,34 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"/>
 
+            <LinearLayout
+                android:id="@+id/errorLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:orientation="vertical"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textAlignment="center"
+                    android:text="There was a problem fetching the library"/>
+
+                <Button
+                    android:id="@+id/btnRefresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:text="Refresh"
+                    android:layout_marginVertical="5dp"
+                    android:layout_gravity="center"
+                    app:strokeColor="@color/white"
+                    app:strokeWidth="1dp"/>
+            </LinearLayout>
+
         </RelativeLayout>
 
     </LinearLayout>

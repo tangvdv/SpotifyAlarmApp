@@ -6,7 +6,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +18,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.airbnb.paris.Paris;
 import com.bumptech.glide.Glide;
@@ -38,7 +42,11 @@ public class MusicLibraryActivity extends AppCompatActivity {
     private ActivityMusicSelectionListBinding binding;
     private List<String> filterTypes;
     private List<MusicModel> musicModelList;
-    private boolean fetchedPlaylist, fetchedAlbum, fetchedArtist = false;
+    private int fetchedPlaylist, fetchedAlbum, fetchedArtist = -1;
+
+    private boolean errorResponse = true;
+
+    private String token;
     private SpotifyAPI spotifyAPI;
 
     @Override
@@ -53,12 +61,13 @@ public class MusicLibraryActivity extends AppCompatActivity {
         musicModelList = new ArrayList<>();
 
         SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
-        String token = sharedPreferences.getString("TOKEN", null);
+        token = sharedPreferences.getString("TOKEN", null);
         if(token != null){
            getLibrary(token);
         }
         else{
             Log.e(TAG, "TOKEN is null");
+            setResultActivity(Activity.RESULT_CANCELED, "TOKEN is null");
         }
 
         bindingManager();
@@ -83,6 +92,17 @@ public class MusicLibraryActivity extends AppCompatActivity {
                 updateFilterList("artist", isChecked);
             }
         });
+
+        binding.btnRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                binding.errorLayout.setVisibility(View.GONE);
+                fetchedAlbum = -1;
+                fetchedPlaylist = -1;
+                fetchedArtist = -1;
+                getLibrary(token);
+            }
+        });
     }
 
     private void getLibrary(String token){
@@ -100,7 +120,7 @@ public class MusicLibraryActivity extends AppCompatActivity {
                     }
                 });
 
-                while(!fetchedPlaylist || !fetchedAlbum || !fetchedArtist) {
+                while(fetchedPlaylist==-1 || fetchedAlbum==-1 || fetchedArtist==-1) {
                     try {
                         sleep(1000);
                     } catch (InterruptedException e) {
@@ -113,7 +133,12 @@ public class MusicLibraryActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         binding.progressBar.setVisibility(View.GONE);
-                        applyFilter();
+                        if(!errorResponse){
+                            applyFilter();
+                        }
+                        else {
+                            binding.errorLayout.setVisibility(View.VISIBLE);
+                        }
                     }
                 });
             }
@@ -137,12 +162,14 @@ public class MusicLibraryActivity extends AppCompatActivity {
             public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
                     musicModelList.addAll(list);
-                    fetchedPlaylist = true;
+                    fetchedPlaylist = 200;
+                    errorResponse = false;
                 }
             }
             @Override
             public void onError(String error) {
                 Log.e(TAG, "GetUserPlaylist : " + error);
+                fetchedPlaylist = 404;
             }
         });
     }
@@ -154,12 +181,14 @@ public class MusicLibraryActivity extends AppCompatActivity {
             public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
                     musicModelList.addAll(list);
-                    fetchedAlbum = true;
+                    fetchedAlbum = 200;
+                    errorResponse = false;
                 }
             }
             @Override
             public void onError(String error) {
                 Log.e(TAG, "GetUserAlbums : " + error);
+                fetchedAlbum = 404;
             }
         });
     }
@@ -171,12 +200,14 @@ public class MusicLibraryActivity extends AppCompatActivity {
             public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
                     musicModelList.addAll(list);
-                    fetchedArtist = true;
+                    fetchedArtist = 200;
+                    errorResponse = false;
                 }
             }
             @Override
             public void onError(String error) {
                 Log.e(TAG, "GetUserArtists : " + error);
+                fetchedArtist = 404;
             }
         });
     }
@@ -263,13 +294,17 @@ public class MusicLibraryActivity extends AppCompatActivity {
     private void onClickLibraryButton(MusicModel musicModel){
         String data = musicToJsonString(musicModel);
         if(!Objects.equals(data, "")){
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra("Data", data);
-            setResult(Activity.RESULT_OK, resultIntent);
+            setResultActivity(Activity.RESULT_OK, data);
         }
         else{
-            setResult(Activity.RESULT_CANCELED);
+            setResultActivity(Activity.RESULT_CANCELED, "");
         }
+    }
+
+    private void setResultActivity(int type, String message){
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("Data", message);
+        setResult(type, resultIntent);
 
         finish();
     }

@@ -10,6 +10,9 @@ import android.util.Log;
 
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.spotify.protocol.client.CallResult;
+import com.spotify.protocol.types.Capabilities;
+import com.spotify.protocol.types.PlayerState;
 
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -8,8 +8,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,16 +27,16 @@ import java.util.Calendar;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
-    PendingIntent pendingIntent;
-    AlarmManager alarmManager;
+    private PendingIntent pendingIntent;
+    private AlarmManager alarmManager;
 
-    LogFile logFile;
-    Context context;
+    private int spotifyConnectionTryAmount = 5;
+
+    private LogFile logFile;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        context = this;
 
         logFile = new LogFile(this);
 
@@ -88,6 +91,7 @@ public class AlarmManagerService extends Service {
                 Log.i(TAG, "SpotifyAppRemote on connected");
                 logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
                 AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
+                spotifyConnectionTryAmount = 5;
                 setAlarm();
             }
             @Override
@@ -95,7 +99,14 @@ public class AlarmManagerService extends Service {
                 Log.e(TAG, throwable.getMessage(), throwable);
                 logFile.writeToFile(TAG, "SpotifyAppRemote on failure : "+throwable.getMessage());
                 if(AlarmModel.getInstance().isState()){
-                    setSpotifyAppRemote();
+                    if(spotifyConnectionTryAmount > 0){
+                        setSpotifyAppRemote();
+                        spotifyConnectionTryAmount--;
+                    }
+                    else{
+                        errorUserToast("Error : Too many attempts connecting to spotify app remote");
+                        onDestroy();
+                    }
                 }
             }
         });
@@ -148,5 +159,11 @@ public class AlarmManagerService extends Service {
             cancelAlarm();
         }
         super.onDestroy();
+    }
+
+    private void errorUserToast(String text){
+        SpannableString spannableString = new SpannableString(text);
+        spannableString.setSpan(new ForegroundColorSpan(Color.RED), 0, spannableString.length(), 0);
+        Toast.makeText(getApplicationContext(), spannableString, Toast.LENGTH_LONG).show();
     }
 }

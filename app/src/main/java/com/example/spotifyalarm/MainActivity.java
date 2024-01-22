@@ -5,15 +5,20 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.text.HtmlCompat;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
@@ -62,6 +67,17 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             getMusicData();
+                        }
+                    }
+                    else if(result.getResultCode() == Activity.RESULT_CANCELED){
+                        Intent data = result.getData();
+                        if(data != null && data.getExtras() != null){
+                            if(Objects.equals(data.getStringExtra("data"), "")){
+                                errorUserToast("Error");
+                            }
+                            else{
+                                errorUserToast("Error : "+ data.getStringExtra("Data"));
+                            }
                         }
                     }
                 }
@@ -169,18 +185,14 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthorizationResponse.Type.TOKEN) {
-                Log.i(TAG, String.valueOf(response.getExpiresIn()));
-                Log.i(TAG, response.getAccessToken());
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("TOKEN", response.getAccessToken());
                 editor.apply();
             }
             else{
                 Log.e(TAG, "Response error : "+response.getError());
+                errorUserToast("Error : failed to open spotify activity.");
             }
-        }
-        else{
-            Log.e(TAG, "Wrong request code : "+requestCode);
         }
     }
     private void getMusicData(){
@@ -318,6 +330,12 @@ public class MainActivity extends AppCompatActivity {
         };
 
         timeLeftThread.start();
+    }
+
+    private void errorUserToast(String text){
+        SpannableString spannableString = new SpannableString(text);
+        spannableString.setSpan(new ForegroundColorSpan(Color.RED), 0, spannableString.length(), 0);
+        Toast.makeText(context, spannableString, Toast.LENGTH_LONG).show();
     }
 
     @Override
