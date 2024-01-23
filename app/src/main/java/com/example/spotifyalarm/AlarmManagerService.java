@@ -92,7 +92,9 @@ public class AlarmManagerService extends Service {
                 logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
                 AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
                 spotifyConnectionTryAmount = 5;
-                setAlarm();
+                if(!AlarmModel.getInstance().isState()){
+                    setAlarm();
+                }
             }
             @Override
             public void onFailure(Throwable throwable) {
