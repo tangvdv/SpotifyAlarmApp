@@ -9,6 +9,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.text.SpannableString;
@@ -42,17 +43,23 @@ public class AlarmManagerService extends Service {
 
         Log.i(TAG, "Service Started");
         logFile.writeToFile(TAG, "Service Started");
-        if(!AlarmModel.getInstance().isState()){
-            Log.i(TAG, "Alarm setter begin");
-            logFile.writeToFile(TAG, "Alarm setter begin");
-            if(AlarmModel.getInstance().getSpotifyAppRemote() == null || !AlarmModel.getInstance().getSpotifyAppRemote().isConnected())
-                setSpotifyAppRemote();
-            else
-                setAlarm();
+
+        if(isNetworkConnected()){
+            if(!AlarmModel.getInstance().isState()){
+                Log.i(TAG, "Alarm setter begin");
+                logFile.writeToFile(TAG, "Alarm setter begin");
+                if(AlarmModel.getInstance().getSpotifyAppRemote() == null || !AlarmModel.getInstance().getSpotifyAppRemote().isConnected())
+                    setSpotifyAppRemote();
+                else
+                    setAlarm();
+            }
+            else{
+                Log.i(TAG, "Alarm already set");
+                logFile.writeToFile(TAG, "Alarm already set");
+            }
         }
         else{
-            Log.i(TAG, "Alarm already set");
-            logFile.writeToFile(TAG, "Alarm already set");
+            onDestroy();
         }
 
         return START_STICKY;
@@ -167,5 +174,11 @@ public class AlarmManagerService extends Service {
         SpannableString spannableString = new SpannableString(text);
         spannableString.setSpan(new ForegroundColorSpan(Color.RED), 0, spannableString.length(), 0);
         Toast.makeText(getApplicationContext(), spannableString, Toast.LENGTH_LONG).show();
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }

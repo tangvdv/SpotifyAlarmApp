@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private int hour;
     private int minute;
+    private Boolean isSpotifyActivityConnected = false;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -99,11 +101,14 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
-        startSpotifyActivity();
         setupActivityViews();
     }
 
     private void setupActivityViews(){
+        if (isNetworkConnected() && !isSpotifyActivityConnected){
+            startSpotifyActivity();
+        }
+
         bindingManager();
 
         getMusicData();
@@ -125,7 +130,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
-                    startService(alarmServiceIntent);
+                    if(isNetworkConnected()){
+                        startService(alarmServiceIntent);
+                    }
+                    else{
+                        errorUserToast("You need to be connected to internet to set an alarm");
+                        binding.setAlarmSwitch.setChecked(false);
+                    }
                 }
                 else{
                     stopService(alarmServiceIntent);
@@ -153,13 +164,29 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(context, MusicLibraryActivity.class);
-                musicActivityResult.launch(intent);
-            }
-        });
+        if(isNetworkConnected()) {
+            Thread musicButtonThread = new Thread() {
+                @Override
+                public void run() {
+                    while (!isSpotifyActivityConnected) {
+                        try {
+                            sleep(100);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent intent = new Intent(context, MusicLibraryActivity.class);
+                            musicActivityResult.launch(intent);
+                        }
+                    });
+                }
+            };
+
+            musicButtonThread.start();
+        }
 
         binding.btnSettings.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -188,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("TOKEN", response.getAccessToken());
                 editor.apply();
+                isSpotifyActivityConnected = true;
             }
             else{
                 Log.e(TAG, "Response error : "+response.getError());
@@ -287,6 +315,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void alarmBindingState(){
+        binding.btnMusicSelection.setClickable(isNetworkConnected());
         binding.setAlarmSwitch.setChecked(AlarmModel.getInstance().isState());
         if(AlarmModel.getInstance().isState()){
             binding.alarmTimeText.setTextColor(getResources().getColor(R.color.white));
@@ -343,5 +372,11 @@ public class MainActivity extends AppCompatActivity {
         AuthorizationClient.stopLoginActivity(this, context.getResources().getInteger(R.integer.request_code));
         Log.i(TAG, "Closed !");
         super.onDestroy();
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }

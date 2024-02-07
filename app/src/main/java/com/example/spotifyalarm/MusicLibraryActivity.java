@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -57,20 +58,25 @@ public class MusicLibraryActivity extends AppCompatActivity {
         binding = ActivityMusicSelectionListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        filterTypes = new ArrayList<>(3);
-        musicModelList = new ArrayList<>();
-
-        SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
-        token = sharedPreferences.getString("TOKEN", null);
-        if(token != null){
-           getLibrary(token);
+        if(!isNetworkConnected()){
+            setResultActivity(Activity.RESULT_CANCELED, "Network connection error");
         }
         else{
-            Log.e(TAG, "TOKEN is null");
-            setResultActivity(Activity.RESULT_CANCELED, "TOKEN is null");
-        }
+            filterTypes = new ArrayList<>(3);
+            musicModelList = new ArrayList<>();
 
-        bindingManager();
+            SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
+            token = sharedPreferences.getString("TOKEN", null);
+            if(token != null){
+                getLibrary(token);
+            }
+            else{
+                Log.e(TAG, "TOKEN is null");
+                setResultActivity(Activity.RESULT_CANCELED, "TOKEN is null");
+            }
+
+            bindingManager();
+        }
     }
 
     private void bindingManager(){
@@ -323,5 +329,11 @@ public class MusicLibraryActivity extends AppCompatActivity {
         JSONObject jsonMusic = new JSONObject(music);
 
         return jsonMusic.toString();
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }

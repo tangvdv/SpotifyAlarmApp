@@ -5,22 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
 
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
-import com.spotify.protocol.client.CallResult;
-import com.spotify.protocol.client.Result;
-import com.spotify.protocol.types.Capabilities;
-import com.spotify.protocol.types.PlayerState;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
