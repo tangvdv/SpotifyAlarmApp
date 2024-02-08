@@ -7,6 +7,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 
@@ -29,6 +31,7 @@ public class SettingsActivity extends AppCompatActivity {
     private boolean repeatSetting = false;
     private boolean shuffleSetting = false;
     private int volumeSetting;
+    private int stopAlarmSetting;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +49,7 @@ public class SettingsActivity extends AppCompatActivity {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         binding.seekBarSoundVolume.setProgress(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2);
         binding.seekBarSoundVolume.setMax(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+        binding.alarmStateText.setText(AlarmModel.getInstance().isState() ? "On" : "Off");
 
         try {
             String data = sharedPreferences.getString("settings", "");
@@ -56,6 +60,7 @@ public class SettingsActivity extends AppCompatActivity {
                 shuffleSetting = Boolean.parseBoolean(jsonData.getString("shuffle"));
                 repeatSetting = Boolean.parseBoolean(jsonData.getString("repeat"));
                 volumeSetting = jsonData.getInt("volume");
+                stopAlarmSetting = jsonData.getInt("stopAlarm");
             }
 
         } catch (JSONException e) {
@@ -65,6 +70,7 @@ public class SettingsActivity extends AppCompatActivity {
         binding.switchRepeatSettings.setChecked(repeatSetting);
         binding.switchShuffleSettings.setChecked(shuffleSetting);
         binding.seekBarSoundVolume.setProgress(volumeSetting);
+        binding.spinnerStopAlarmSettings.setSelection(stopAlarmSetting);
     }
 
     private void bindingManager(){
@@ -128,6 +134,18 @@ public class SettingsActivity extends AppCompatActivity {
 
             }
         });
+
+        binding.spinnerStopAlarmSettings.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
+                stopAlarmSetting = pos;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
     private void applySettings(){
@@ -147,6 +165,7 @@ public class SettingsActivity extends AppCompatActivity {
             jsonSettings.put("shuffle", String.valueOf(shuffleSetting));
             jsonSettings.put("repeat", String.valueOf(repeatSetting));
             jsonSettings.put("volume", volumeSetting);
+            jsonSettings.put("stopAlarm", stopAlarmSetting);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }

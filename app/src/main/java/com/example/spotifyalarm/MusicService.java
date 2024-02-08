@@ -1,5 +1,7 @@
 package com.example.spotifyalarm;
 
+import static java.lang.Thread.sleep;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -7,10 +9,13 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
+import android.text.format.Time;
 import android.util.Log;
 
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.spotify.protocol.client.CallResult;
+import com.spotify.protocol.types.PlayerState;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,6 +29,11 @@ public class MusicService extends Service {
     private SpotifyAppRemote mySpotifyAppRemote;
 
     private boolean nextAlarm = false;
+
+    private int[] stopAlarmValues;
+    private int stopAlarm;
+
+    private boolean isPaused = true;
 
     private LogFile logFile;
 
@@ -57,6 +67,11 @@ public class MusicService extends Service {
             mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
             Log.i(TAG, "Play");
+            isPaused = false;
+
+            if(stopAlarm != 0){
+                stopAlarmTimeLeftThread();
+            }
         }
         else{
             Log.e(TAG, "SpotifyPlayerApi object null");
@@ -102,11 +117,45 @@ public class MusicService extends Service {
 
                 AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                 am.setStreamVolume(AudioManager.STREAM_ALARM, jsonData.getInt("volume"), 0);
+
+                stopAlarmValues = getResources().getIntArray(R.array.stop_alarm_values);
+                stopAlarm = stopAlarmValues[jsonData.getInt("stopAlarm")];
             }
 
         } catch (JSONException e) {
             e.printStackTrace();
             Log.e(TAG, e.toString());
         }
+    }
+
+    private void stopAlarmTimeLeftThread(){
+        Thread stopAlarmThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (stopAlarm > 0 && !isPaused){
+                    try {
+                        Log.i(TAG, "Alarm stop in : "+stopAlarm+" minute(s)");
+                        sleep(60000);
+                        stopAlarm -= 1;
+                        mySpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+                            @Override
+                            public void onResult(PlayerState playerState) {
+                                Log.i(TAG, "On Player Api Callback Result, is paused : "+ playerState.isPaused);
+                                isPaused = playerState.isPaused;
+                            }
+                        });
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                if(!isPaused){
+                    mySpotifyAppRemote.getPlayerApi().pause();
+                }
+                Log.i(TAG, "Alarm over");
+            }
+        });
+
+        stopAlarmThread.start();
     }
 }

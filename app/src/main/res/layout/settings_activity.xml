@@ -27,6 +27,7 @@
                 android:textAlignment="center" />
 
             <TextView
+                android:id="@+id/alarmStateText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Off"
@@ -119,6 +120,36 @@
                 android:text="Repeat"
                 android:textColor="@color/white"
                 android:textSize="20dp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
+
+            <Button
+                android:id="@+id/btnStopAlarmSettings"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:backgroundTint="@color/grey"
+                app:cornerRadius="10dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"
+                android:text="Stop alarm : "
+                android:textColor="@color/white"
+                android:textSize="20dp" />
+
+            <Spinner
+                android:id="@+id/spinnerStopAlarmSettings"
+                android:layout_width="250dp"
+                android:layout_alignParentEnd="true"
+                android:layout_height="match_parent"
+                android:spinnerMode="dropdown"
+                android:theme="@style/Spinner"
+                android:entries="@array/stop_alarm_entries"/>
         </RelativeLayout>
 
         <View
