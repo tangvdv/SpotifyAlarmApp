@@ -18,6 +18,24 @@
         android:orientation="vertical">
 
         <RelativeLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:layout_margin="10dp">
+
+            <Button
+                android:id="@+id/btnUserProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:shadowColor="@color/black"/>
+
+            <ImageView
+                android:id="@+id/imageUserProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </RelativeLayout>
+
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="100dp"
             android:layout_marginTop="30dp">

@@ -1,13 +1,15 @@
 package com.example.spotifyalarm;
 
+import static java.lang.Thread.sleep;
+
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.text.HtmlCompat;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,15 +19,19 @@ import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
+import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMainBinding;
+import com.example.spotifyalarm.databinding.UserProfileDialogBinding;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
@@ -45,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Context context;
     private ActivityMainBinding binding;
+
+    private Dialog userProfileDialog;
+
     private MaterialTimePicker timePicker;
     private Calendar calendar;
     private Intent alarmServiceIntent;
@@ -52,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     private int hour;
     private int minute;
     private Boolean isSpotifyActivityConnected = false;
+
+    private SpotifyAPI spotifyAPI;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -109,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
             startSpotifyActivity();
         }
 
+        getUserProfileData();
+
         bindingManager();
 
         getMusicData();
@@ -131,7 +144,13 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
                     if(isNetworkConnected()){
-                        startService(alarmServiceIntent);
+                        if(isSpotifyActivityConnected){
+                            startService(alarmServiceIntent);
+                        }
+                        else{
+                            errorUserToast("You need to be connected to Spotify to set an alarm");
+                            binding.setAlarmSwitch.setChecked(false);
+                        }
                     }
                     else{
                         errorUserToast("You need to be connected to internet to set an alarm");
@@ -195,6 +214,15 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        binding.btnUserProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(userProfileDialog != null){
+                    userProfileDialog.show();
+                }
+            }
+        });
     }
 
     private void startSpotifyActivity(){
@@ -202,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
                 new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
 
         builder.setScopes(getResources().getStringArray(R.array.scopes));
+        builder.setShowDialog(true);
         AuthorizationRequest request = builder.build();
 
         AuthorizationClient.openLoginActivity(this, context.getResources().getInteger(R.integer.request_code) ,request);
@@ -223,6 +252,131 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    private void getUserProfileData(){
+        String data = sharedPreferences.getString("user", "");
+        HashMap<String, String> user = new HashMap<>();
+
+        if(!Objects.equals(data, "")){
+            Log.i(TAG, "User profile data with shared preferences");
+            try {
+                JSONObject jsonData = new JSONObject(data);
+
+                user.put("image", jsonData.getString("image"));
+                user.put("name", jsonData.getString("name"));
+
+                setUserProfileView(user);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            if(isNetworkConnected()){
+                Log.i(TAG, "User Profile data with API");
+                Thread userProfileDataThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while(!isSpotifyActivityConnected){
+                            try {
+                                sleep(100);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+                        spotifyAPI = new SpotifyAPI(context, sharedPreferences.getString("TOKEN", ""));
+                        spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
+                            @Override
+                            public void onSuccess(String name, String image_url) {
+                                user.put("image", image_url);
+                                user.put("name", name);
+
+                                JSONObject jsonUser = new JSONObject(user);
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("user", jsonUser.toString());
+                                editor.apply();
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        setUserProfileView(user);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onError(String error) {
+                                Log.e(TAG, "GetUserProfile : " + error);
+                                errorUserToast("GetUserProfile : " + error);
+                            }
+                        });
+                    }
+                });
+
+                userProfileDataThread.start();
+            }
+        }
+    }
+
+    private void setUserProfileView(HashMap<String, String> user){
+        Glide.with(context)
+                .load(user.get("image"))
+                .apply(new RequestOptions()
+                        .transform(new CenterCrop(), new CircleCrop())
+                )
+                .into(binding.imageUserProfile);
+
+        userProfileDialog = new Dialog(context);
+        userProfileDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        userProfileDialog.setCancelable(true);
+        userProfileDialog.setContentView(R.layout.user_profile_dialog);
+
+        UserProfileDialogBinding binding = UserProfileDialogBinding.inflate(LayoutInflater.from(context));
+        userProfileDialog.setContentView(binding.getRoot());
+
+        binding.textUserProfile.setText(user.get("name"));
+        Glide.with(context)
+                .load(user.get("image"))
+                .apply(new RequestOptions()
+                        .transform(new CenterCrop(), new CircleCrop())
+                )
+                .into(binding.imageUserProfile);
+
+        setUserProfileBinding(binding);
+    }
+
+    private void setUserProfileBinding(UserProfileDialogBinding binding){
+        binding.btnOpenSpotifyApp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.spotify.music");
+                if (launchIntent != null) {
+                    startActivity(launchIntent);
+                }
+                else{
+                    errorUserToast("Couldn't find spotify application");
+                }
+            }
+        });
+
+        binding.btnDisconnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                userProfileDialog.dismiss();
+
+                AuthorizationClient.clearCookies(context);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.clear();
+                editor.apply();
+
+                Intent intent = new Intent(context, MainActivity.class);
+                startActivity(intent);
+                finishAffinity();
+            }
+        });
+    }
+
     private void getMusicData(){
         HashMap<String, String> music = new HashMap<>();
         try {
