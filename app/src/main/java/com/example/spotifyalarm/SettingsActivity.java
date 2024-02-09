@@ -3,12 +3,9 @@ package com.example.spotifyalarm;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 
@@ -19,15 +16,13 @@ import com.example.spotifyalarm.databinding.SettingsActivityBinding;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "SettingsActivity";
+    private Context context;
     private SettingsActivityBinding binding;
     private SharedPreferences sharedPreferences;
-
     private boolean repeatSetting = false;
     private boolean shuffleSetting = false;
     private int volumeSetting;
@@ -37,6 +32,7 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        context = this;
         binding = SettingsActivityBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
@@ -49,12 +45,11 @@ public class SettingsActivity extends AppCompatActivity {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         binding.seekBarSoundVolume.setProgress(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2);
         binding.seekBarSoundVolume.setMax(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
-        binding.alarmStateText.setText(AlarmModel.getInstance().isState() ? "On" : "Off");
+        binding.alarmStateText.setText(AlarmModel.getInstance().isState() ? context.getString(R.string.alarm_on) : context.getString(R.string.alarm_off));
 
         try {
             String data = sharedPreferences.getString("settings", "");
             if(!Objects.equals(data, "")){
-                Log.i(TAG, "Settings data loaded");
                 JSONObject jsonData = new JSONObject(data);
 
                 shuffleSetting = Boolean.parseBoolean(jsonData.getString("shuffle"));
@@ -161,7 +156,6 @@ public class SettingsActivity extends AppCompatActivity {
         JSONObject jsonSettings = new JSONObject();
 
         try {
-            Log.i(TAG, "Settings data saved");
             jsonSettings.put("shuffle", String.valueOf(shuffleSetting));
             jsonSettings.put("repeat", String.valueOf(repeatSetting));
             jsonSettings.put("volume", volumeSetting);

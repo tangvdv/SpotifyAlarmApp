@@ -6,11 +6,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +16,13 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.airbnb.paris.Paris;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.spotifyalarm.databinding.ActivityMusicSelectionListBinding;
+import com.example.spotifyalarm.databinding.ActivityLibraryBinding;
 
 import org.json.JSONObject;
 
@@ -38,28 +34,26 @@ import java.util.Objects;
 
 public class MusicLibraryActivity extends AppCompatActivity {
     private static final String TAG = "MusicLibraryActivity";
-
     private Context context;
-    private ActivityMusicSelectionListBinding binding;
+
+    private ActivityLibraryBinding binding;
     private List<String> filterTypes;
     private List<MusicModel> musicModelList;
     private int fetchedPlaylist, fetchedAlbum, fetchedArtist = -1;
-
     private boolean errorResponse = true;
-
     private String token;
     private SpotifyAPI spotifyAPI;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setContentView(R.layout.activity_music_selection_list);
+        setContentView(R.layout.activity_library);
         super.onCreate(savedInstanceState);
         context = this;
-        binding = ActivityMusicSelectionListBinding.inflate(getLayoutInflater());
+        binding = ActivityLibraryBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         if(!isNetworkConnected()){
-            setResultActivity(Activity.RESULT_CANCELED, "Network connection error");
+            setResultActivity(Activity.RESULT_CANCELED, context.getString(R.string.network_error));
         }
         else{
             filterTypes = new ArrayList<>(3);
@@ -72,7 +66,7 @@ public class MusicLibraryActivity extends AppCompatActivity {
             }
             else{
                 Log.e(TAG, "TOKEN is null");
-                setResultActivity(Activity.RESULT_CANCELED, "TOKEN is null");
+                setResultActivity(Activity.RESULT_CANCELED, context.getString(R.string.token_null));
             }
 
             bindingManager();
@@ -133,7 +127,6 @@ public class MusicLibraryActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-                Log.i(TAG, "Data fetched");
 
                 runOnUiThread(new Runnable() {
                     @Override

@@ -51,9 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Context context;
     private ActivityMainBinding binding;
-
     private Dialog userProfileDialog;
-
     private MaterialTimePicker timePicker;
     private Calendar calendar;
     private Intent alarmServiceIntent;
@@ -61,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
     private int hour;
     private int minute;
     private Boolean isSpotifyActivityConnected = false;
-
     private SpotifyAPI spotifyAPI;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
@@ -89,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                                 errorUserToast("Error");
                             }
                             else{
-                                errorUserToast("Error : "+ data.getStringExtra("Data"));
+                                errorUserToast(data.getStringExtra("Data"));
                             }
                         }
                     }
@@ -121,14 +118,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         getUserProfileData();
+        getMusicData();
 
         bindingManager();
 
-        getMusicData();
         setCalendar();
         alarmBindingState();
-
-        binding.setAlarmSwitch.setChecked( AlarmModel.getInstance().isState() );
     }
 
     private void bindingManager(){
@@ -148,12 +143,12 @@ public class MainActivity extends AppCompatActivity {
                             startService(alarmServiceIntent);
                         }
                         else{
-                            errorUserToast("You need to be connected to Spotify to set an alarm");
+                            errorUserToast(context.getString(R.string.alarm_spotify_connection_error));
                             binding.setAlarmSwitch.setChecked(false);
                         }
                     }
                     else{
-                        errorUserToast("You need to be connected to internet to set an alarm");
+                        errorUserToast(context.getString(R.string.alarm_network_connection_error));
                         binding.setAlarmSwitch.setChecked(false);
                     }
                 }
@@ -248,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
             }
             else{
                 Log.e(TAG, "Response error : "+response.getError());
-                errorUserToast("Error : failed to open spotify activity.");
+                errorUserToast(context.getString(R.string.spotify_activity_error));
             }
         }
     }
@@ -258,7 +253,6 @@ public class MainActivity extends AppCompatActivity {
         HashMap<String, String> user = new HashMap<>();
 
         if(!Objects.equals(data, "")){
-            Log.i(TAG, "User profile data with shared preferences");
             try {
                 JSONObject jsonData = new JSONObject(data);
 
@@ -273,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             if(isNetworkConnected()){
-                Log.i(TAG, "User Profile data with API");
                 Thread userProfileDataThread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -308,7 +301,6 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onError(String error) {
                                 Log.e(TAG, "GetUserProfile : " + error);
-                                errorUserToast("GetUserProfile : " + error);
                             }
                         });
                     }
@@ -355,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(launchIntent);
                 }
                 else{
-                    errorUserToast("Couldn't find spotify application");
+                    errorUserToast(context.getString(R.string.spotify_app_missing_error));
                 }
             }
         });
@@ -409,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
                     .into(binding.imagePlaylist);
         }
         else{
-            binding.textPlaylistName.setText("Select music");
+            binding.textPlaylistName.setText(context.getString(R.string.button_select_music));
         }
     }
 
@@ -444,7 +436,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setCalendar(){
-        calendar = calendar.getInstance();
+        calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         calendar.set(Calendar.MINUTE, minute);
         calendar.set(Calendar.SECOND, 0);
@@ -500,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
                                 long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
 
                                 String timeLeft = String.format("%02d:%02d", hours, minutes);
-                                binding.alarmTimeLeftText.setText("Alarm in : " + timeLeft);
+                                binding.alarmTimeLeftText.setText(context.getString(R.string.alarm_time_left) + " : " + timeLeft);
                             }
                         });
 
@@ -524,7 +516,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         AuthorizationClient.stopLoginActivity(this, context.getResources().getInteger(R.integer.request_code));
-        Log.i(TAG, "Closed !");
         super.onDestroy();
     }
 

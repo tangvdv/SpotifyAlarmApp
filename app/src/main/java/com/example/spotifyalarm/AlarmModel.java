@@ -1,15 +1,10 @@
 package com.example.spotifyalarm;
 
-import android.app.PendingIntent;
-import android.provider.CalendarContract;
-import android.util.Log;
-
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Map;
 
 public class AlarmModel {
     private static AlarmModel instance;

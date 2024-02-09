@@ -7,9 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
-import android.net.ConnectivityManager;
 import android.os.IBinder;
-import android.text.format.Time;
 import android.util.Log;
 
 import com.spotify.android.appremote.api.PlayerApi;
@@ -25,30 +23,19 @@ import java.util.Objects;
 
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
-
     private SpotifyAppRemote mySpotifyAppRemote;
-
     private boolean nextAlarm = false;
-
     private int[] stopAlarmValues;
     private int stopAlarm;
-
     private boolean isPaused = true;
-
-    private LogFile logFile;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
-        logFile = new LogFile(this);
         mySpotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
         if(AlarmModel.getInstance().isState()) {
-            logFile.writeToFile(TAG, "Service started, alarm is on");
             AlarmModel.getInstance().setState(false);
             play();
-        }
-        else{
-            logFile.writeToFile(TAG, "Service started, alarm is off");
         }
 
         return START_STICKY;
@@ -63,7 +50,6 @@ public class MusicService extends Service {
         applySettings();
         String uri = AlarmModel.getInstance().getPlaylist_uri();
         if(mySpotifyAppRemote != null && !uri.equals("")){
-            logFile.writeToFile(TAG, "Alarm trigger");
             mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
             Log.i(TAG, "Play");
@@ -75,10 +61,7 @@ public class MusicService extends Service {
         }
         else{
             Log.e(TAG, "SpotifyPlayerApi object null");
-            logFile.writeToFile(TAG, "SpotifyPlayerApi object null");
         }
-
-        logFile.writeToFile(TAG, "Service stop");
 
         if(nextAlarm) setNextAlarm();
         else{
@@ -90,7 +73,6 @@ public class MusicService extends Service {
     }
 
     private void setNextAlarm(){
-        Log.i(TAG, "Alarm repeat set");
         Intent alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
         Calendar calendar = AlarmModel.getInstance().getCalendar();
@@ -102,13 +84,11 @@ public class MusicService extends Service {
 
     private void applySettings(){
         try {
-            logFile.writeToFile(TAG, "Apply settings");
             SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
             String data = sharedPreferences.getString("settings", "");
             if(!Objects.equals(data, "")){
                 JSONObject jsonData = new JSONObject(data);
                 Log.i(TAG, jsonData.toString());
-                logFile.writeToFile(TAG, jsonData.toString());
                 mySpotifyAppRemote.getPlayerApi().setShuffle(Boolean.parseBoolean(jsonData.getString("shuffle")));
 
                 if(Boolean.parseBoolean(jsonData.getString("repeat"))){
@@ -140,7 +120,6 @@ public class MusicService extends Service {
                         mySpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
                             @Override
                             public void onResult(PlayerState playerState) {
-                                Log.i(TAG, "On Player Api Callback Result, is paused : "+ playerState.isPaused);
                                 isPaused = playerState.isPaused;
                             }
                         });
@@ -152,7 +131,6 @@ public class MusicService extends Service {
                 if(!isPaused){
                     mySpotifyAppRemote.getPlayerApi().pause();
                 }
-                Log.i(TAG, "Alarm over");
             }
         });
 

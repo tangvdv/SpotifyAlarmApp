@@ -28,34 +28,19 @@ import java.util.Calendar;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
-    private PendingIntent pendingIntent;
     private AlarmManager alarmManager;
-
     private int spotifyConnectionTryAmount = 5;
-
-    private LogFile logFile;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        logFile = new LogFile(this);
-
-        Log.i(TAG, "Service Started");
-        logFile.writeToFile(TAG, "Service Started");
-
         if(isNetworkConnected()){
             if(!AlarmModel.getInstance().isState()){
-                Log.i(TAG, "Alarm setter begin");
-                logFile.writeToFile(TAG, "Alarm setter begin");
                 if(AlarmModel.getInstance().getSpotifyAppRemote() == null || !AlarmModel.getInstance().getSpotifyAppRemote().isConnected())
                     setSpotifyAppRemote();
                 else
                     setAlarm();
-            }
-            else{
-                Log.i(TAG, "Alarm already set");
-                logFile.writeToFile(TAG, "Alarm already set");
             }
         }
         else{
@@ -91,12 +76,10 @@ public class AlarmManagerService extends Service {
                         .showAuthView(true)
                         .build();
         Log.i(TAG, "setSpotifyAppRemote");
-        logFile.writeToFile(TAG, "setSpotifyAppRemote");
         SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
             @Override
             public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                 Log.i(TAG, "SpotifyAppRemote on connected");
-                logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
                 AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
                 spotifyConnectionTryAmount = 5;
                 if(!AlarmModel.getInstance().isState()){
@@ -106,7 +89,6 @@ public class AlarmManagerService extends Service {
             @Override
             public void onFailure(Throwable throwable) {
                 Log.e(TAG, throwable.getMessage(), throwable);
-                logFile.writeToFile(TAG, "SpotifyAppRemote on failure : "+throwable.getMessage());
                 if(AlarmModel.getInstance().isState()){
                     if(spotifyConnectionTryAmount > 0){
                         setSpotifyAppRemote();
@@ -129,7 +111,7 @@ public class AlarmManagerService extends Service {
     public void setAlarm(){
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Calendar calendar = AlarmModel.getInstance().getCalendar();
 
@@ -141,15 +123,9 @@ public class AlarmManagerService extends Service {
 
         createNotification();
 
-        Log.i(TAG, "Set alarm : " +
-                new SimpleDateFormat("HH:mm:ss").format(calendar.getTime()) + " ; " + new SimpleDateFormat("HH:mm:ss:SSS").format(Calendar.getInstance().getTime().getTime()));
-
-        Toast.makeText(this, "Alarm Set", Toast.LENGTH_SHORT).show();
-
         AlarmModel.getInstance().setState(true);
 
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
-        logFile.writeToFile(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
     }
 
     public void cancelAlarm(){
@@ -157,13 +133,10 @@ public class AlarmManagerService extends Service {
             alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         }
         AlarmModel.getInstance().setState(false);
-        Toast.makeText(this, "Alarm Canceled", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onDestroy() {
-        Log.i(TAG, "Service stopped");
-        logFile.writeToFile(TAG, "Service stopped");
         if(AlarmModel.getInstance().isState()){
             cancelAlarm();
         }

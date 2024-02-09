@@ -116,7 +116,7 @@
                     android:layout_centerHorizontal="true"
                     android:layout_margin="5dp"
                     android:textColor="@color/light_grey"
-                    android:textSize="20dp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView

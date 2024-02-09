@@ -61,10 +61,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="10dp"
-            android:text="Open Spotify Application"
+            android:layout_marginStart="10dp"
+            android:text="@string/open_spotify_app_title"
             android:textColor="@color/white"
-            android:textSize="16dp" />
+            android:textSize="16sp" />
     </RelativeLayout>
 
     <View
@@ -88,11 +88,11 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginLeft="10dp"
-            android:text="Disconnect"
+            android:layout_marginStart="10dp"
+            android:text="@string/disconnect_title"
             android:textStyle="bold"
             android:textColor="@color/white"
-            android:textSize="16dp" />
+            android:textSize="16sp" />
     </RelativeLayout>
 
 </LinearLayout>

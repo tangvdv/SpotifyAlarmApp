@@ -94,14 +94,14 @@
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
                     android:textAlignment="center"
-                    android:text="There was a problem fetching the library"/>
+                    android:text="@string/library_fetch_error"/>
 
                 <Button
                     android:id="@+id/btnRefresh"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAlignment="center"
-                    android:text="Refresh"
+                    android:text="@string/button_refresh"
                     android:layout_marginVertical="5dp"
                     android:layout_gravity="center"
                     app:strokeColor="@color/white"
