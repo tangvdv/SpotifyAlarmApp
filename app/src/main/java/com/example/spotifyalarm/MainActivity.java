@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private int hour;
     private int minute;
-    private Boolean isSpotifyActivityConnected = false;
+    private int isSpotifyActivityConnected = -1;
     private SpotifyAPI spotifyAPI;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
@@ -113,17 +113,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupActivityViews(){
-        if (isNetworkConnected() && !isSpotifyActivityConnected){
+        if (isNetworkConnected() && isSpotifyActivityConnected == -1){
             startSpotifyActivity();
+            isSpotifyActivityConnected = 0;
         }
 
-        getUserProfileData();
-        getMusicData();
+        Thread setupThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.mainLayout.setVisibility(View.GONE);
+                        binding.progressBar.setVisibility(View.VISIBLE);
+                    }
+                });
 
-        bindingManager();
+                while (isSpotifyActivityConnected == 0){
+                    try {
+                        sleep(100);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
 
-        setCalendar();
-        alarmBindingState();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        binding.mainLayout.setVisibility(View.VISIBLE);
+                        binding.progressBar.setVisibility(View.GONE);
+
+                        getUserProfileData();
+                        getMusicData();
+
+                        bindingManager();
+
+                        setCalendar();
+                        alarmBindingState();
+                    }
+                });
+            }
+        });
+
+        setupThread.start();
     }
 
     private void bindingManager(){
@@ -138,22 +170,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
-                    if(isNetworkConnected()){
-                        if(isSpotifyActivityConnected){
-                            startService(alarmServiceIntent);
+                    if(!AlarmModel.getInstance().isState()){
+                        if(isNetworkConnected()){
+                            if(isSpotifyActivityConnected == 1){
+                                startService(alarmServiceIntent);
+                            }
+                            else{
+                                errorUserToast(context.getString(R.string.alarm_spotify_connection_error));
+                                binding.setAlarmSwitch.setChecked(false);
+                            }
                         }
                         else{
-                            errorUserToast(context.getString(R.string.alarm_spotify_connection_error));
+                            errorUserToast(context.getString(R.string.alarm_network_connection_error));
                             binding.setAlarmSwitch.setChecked(false);
                         }
                     }
-                    else{
-                        errorUserToast(context.getString(R.string.alarm_network_connection_error));
-                        binding.setAlarmSwitch.setChecked(false);
-                    }
                 }
                 else{
-                    stopService(alarmServiceIntent);
+                    if(AlarmModel.getInstance().isState()){
+                        stopService(alarmServiceIntent);
+                    }
                 }
 
                 Thread thread = new Thread() {
@@ -178,28 +214,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if(isNetworkConnected()) {
-            Thread musicButtonThread = new Thread() {
+        if(isNetworkConnected() && isSpotifyActivityConnected == 1) {
+            binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void run() {
-                    while (!isSpotifyActivityConnected) {
-                        try {
-                            sleep(100);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Intent intent = new Intent(context, MusicLibraryActivity.class);
-                            musicActivityResult.launch(intent);
-                        }
-                    });
+                public void onClick(View view) {
+                    Intent intent = new Intent(context, MusicLibraryActivity.class);
+                    musicActivityResult.launch(intent);
                 }
-            };
-
-            musicButtonThread.start();
+            });
         }
 
         binding.btnSettings.setOnClickListener(new View.OnClickListener() {
@@ -225,7 +247,6 @@ public class MainActivity extends AppCompatActivity {
                 new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
 
         builder.setScopes(getResources().getStringArray(R.array.scopes));
-        builder.setShowDialog(true);
         AuthorizationRequest request = builder.build();
 
         AuthorizationClient.openLoginActivity(this, context.getResources().getInteger(R.integer.request_code) ,request);
@@ -239,12 +260,16 @@ public class MainActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("TOKEN", response.getAccessToken());
                 editor.apply();
-                isSpotifyActivityConnected = true;
+                isSpotifyActivityConnected = 1;
             }
             else{
+                isSpotifyActivityConnected = -1;
                 Log.e(TAG, "Response error : "+response.getError());
                 errorUserToast(context.getString(R.string.spotify_activity_error));
             }
+        }
+        else{
+            isSpotifyActivityConnected = -1;
         }
     }
 
@@ -266,47 +291,32 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         else {
-            if(isNetworkConnected()){
-                Thread userProfileDataThread = new Thread(new Runnable() {
+            if(isNetworkConnected() && isSpotifyActivityConnected == 1){
+                spotifyAPI = new SpotifyAPI(context, sharedPreferences.getString("TOKEN", ""));
+                spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
                     @Override
-                    public void run() {
-                        while(!isSpotifyActivityConnected){
-                            try {
-                                sleep(100);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
+                    public void onSuccess(String name, String image_url) {
+                        user.put("image", image_url);
+                        user.put("name", name);
 
-                        spotifyAPI = new SpotifyAPI(context, sharedPreferences.getString("TOKEN", ""));
-                        spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
+                        JSONObject jsonUser = new JSONObject(user);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("user", jsonUser.toString());
+                        editor.apply();
+
+                        runOnUiThread(new Runnable() {
                             @Override
-                            public void onSuccess(String name, String image_url) {
-                                user.put("image", image_url);
-                                user.put("name", name);
-
-                                JSONObject jsonUser = new JSONObject(user);
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("user", jsonUser.toString());
-                                editor.apply();
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        setUserProfileView(user);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onError(String error) {
-                                Log.e(TAG, "GetUserProfile : " + error);
+                            public void run() {
+                                setUserProfileView(user);
                             }
                         });
                     }
-                });
 
-                userProfileDataThread.start();
+                    @Override
+                    public void onError(String error) {
+                        Log.e(TAG, "GetUserProfile : " + error);
+                    }
+                });
             }
         }
     }
