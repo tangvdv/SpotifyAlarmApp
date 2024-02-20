@@ -25,7 +25,6 @@ public class MusicService extends Service {
     private static final String TAG = "MusicService";
     private SpotifyAppRemote mySpotifyAppRemote;
     private boolean nextAlarm = false;
-    private int[] stopAlarmValues;
     private int stopAlarm;
     private boolean isPaused = true;
 
@@ -33,8 +32,7 @@ public class MusicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
         mySpotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
-        if(AlarmModel.getInstance().isState()) {
-            AlarmModel.getInstance().setState(false);
+        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
             play();
         }
 
@@ -53,6 +51,7 @@ public class MusicService extends Service {
             mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
             Log.i(TAG, "Play");
+            AlarmModel.getInstance().setAlarmRing();
             isPaused = false;
 
             if(stopAlarm != 0){
@@ -65,8 +64,8 @@ public class MusicService extends Service {
 
         if(nextAlarm) setNextAlarm();
         else{
-            AlarmModel.getInstance().setState(false);
             stopService(new Intent(this, AlarmManagerService.class));
+
         }
 
         this.stopSelf();
@@ -98,7 +97,7 @@ public class MusicService extends Service {
                 AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
                 am.setStreamVolume(AudioManager.STREAM_ALARM, jsonData.getInt("volume"), 0);
 
-                stopAlarmValues = getResources().getIntArray(R.array.stop_alarm_values);
+                int[] stopAlarmValues = getResources().getIntArray(R.array.stop_alarm_values);
                 stopAlarm = stopAlarmValues[jsonData.getInt("stopAlarm")];
             }
 

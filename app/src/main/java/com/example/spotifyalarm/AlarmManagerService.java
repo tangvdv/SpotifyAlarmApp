@@ -12,6 +12,7 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -23,22 +24,22 @@ import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
-    private AlarmManager alarmManager;
     private int spotifyConnectionTryAmount = 5;
+    PowerManager.WakeLock wakeLock;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
         if(isNetworkConnected()){
-            if(!AlarmModel.getInstance().isState()){
-                if(AlarmModel.getInstance().getSpotifyAppRemote() == null || !AlarmModel.getInstance().getSpotifyAppRemote().isConnected())
+            if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF || AlarmModel.getInstance().getCurrentState() == AlarmModel.State.RINGING){
+                if(AlarmModel.getInstance().getSpotifyAppRemote() == null || !AlarmModel.getInstance().getSpotifyAppRemote().isConnected()) {
                     setSpotifyAppRemote();
+                }
                 else
                     setAlarm();
             }
@@ -82,14 +83,14 @@ public class AlarmManagerService extends Service {
                 Log.i(TAG, "SpotifyAppRemote on connected");
                 AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
                 spotifyConnectionTryAmount = 5;
-                if(!AlarmModel.getInstance().isState()){
+                if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
                     setAlarm();
                 }
             }
             @Override
             public void onFailure(Throwable throwable) {
                 Log.e(TAG, throwable.getMessage(), throwable);
-                if(AlarmModel.getInstance().isState()){
+                if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                     if(spotifyConnectionTryAmount > 0){
                         setSpotifyAppRemote();
                         spotifyConnectionTryAmount--;
@@ -109,7 +110,13 @@ public class AlarmManagerService extends Service {
     }
 
     public void setAlarm(){
-        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - AlarmModel.getInstance().getCalendar().getTimeInMillis());
+
+        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SpotifyAlarm::AlarmWakeLock");
+        wakeLock.acquire(diffInMillies + 60000);
+        
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -123,23 +130,20 @@ public class AlarmManagerService extends Service {
 
         createNotification();
 
-        AlarmModel.getInstance().setState(true);
+        AlarmModel.getInstance().setAlarmOn();
 
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
     }
 
-    public void cancelAlarm(){
-        if (alarmManager == null) {
-            alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        }
-        AlarmModel.getInstance().setState(false);
-    }
-
     @Override
     public void onDestroy() {
-        if(AlarmModel.getInstance().isState()){
-            cancelAlarm();
+        if(AlarmModel.getInstance().getCurrentState() != AlarmModel.State.OFF){
+            if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
+                wakeLock.release();
+            }
+            AlarmModel.getInstance().setAlarmOff();
         }
+
         super.onDestroy();
     }
 

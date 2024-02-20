@@ -45,7 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         binding.seekBarSoundVolume.setProgress(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2);
         binding.seekBarSoundVolume.setMax(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
-        binding.alarmStateText.setText(AlarmModel.getInstance().isState() ? context.getString(R.string.alarm_on) : context.getString(R.string.alarm_off));
+        binding.alarmStateText.setText(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON ? context.getString(R.string.alarm_on) : context.getString(R.string.alarm_off));
 
         try {
             String data = sharedPreferences.getString("settings", "");

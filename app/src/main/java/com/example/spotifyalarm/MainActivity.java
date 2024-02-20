@@ -58,8 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private int hour;
     private int minute;
-    private int isSpotifyActivityConnected = -1;
-    private SpotifyAPI spotifyAPI;
+    private int isSpotifyActivityConnected;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -99,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        isSpotifyActivityConnected = -1;
 
         sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
 
@@ -158,6 +159,24 @@ public class MainActivity extends AppCompatActivity {
         setupThread.start();
     }
 
+    private void startAlarmService(){
+        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
+            if(isNetworkConnected()){
+                if(isSpotifyActivityConnected == 1){
+                    startForegroundService(alarmServiceIntent);
+                }
+                else{
+                    errorUserToast(context.getString(R.string.alarm_spotify_connection_error));
+                    binding.setAlarmSwitch.setChecked(false);
+                }
+            }
+            else{
+                errorUserToast(context.getString(R.string.alarm_network_connection_error));
+                binding.setAlarmSwitch.setChecked(false);
+            }
+        }
+    }
+
     private void bindingManager(){
         binding.btnSetTime.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -170,24 +189,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b){
-                    if(!AlarmModel.getInstance().isState()){
-                        if(isNetworkConnected()){
-                            if(isSpotifyActivityConnected == 1){
-                                startService(alarmServiceIntent);
-                            }
-                            else{
-                                errorUserToast(context.getString(R.string.alarm_spotify_connection_error));
-                                binding.setAlarmSwitch.setChecked(false);
-                            }
-                        }
-                        else{
-                            errorUserToast(context.getString(R.string.alarm_network_connection_error));
-                            binding.setAlarmSwitch.setChecked(false);
-                        }
-                    }
+                    startAlarmService();
                 }
                 else{
-                    if(AlarmModel.getInstance().isState()){
+                    if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                         stopService(alarmServiceIntent);
                     }
                 }
@@ -195,7 +200,8 @@ public class MainActivity extends AppCompatActivity {
                 Thread thread = new Thread() {
                     @Override
                     public void run() {
-                        while(b != AlarmModel.getInstance().isState()) {
+                        while(b != (AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON)) {
+
                             try {
                                 sleep(100);
                             } catch (InterruptedException e) {
@@ -268,9 +274,6 @@ public class MainActivity extends AppCompatActivity {
                 errorUserToast(context.getString(R.string.spotify_activity_error));
             }
         }
-        else{
-            isSpotifyActivityConnected = -1;
-        }
     }
 
     private void getUserProfileData(){
@@ -292,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             if(isNetworkConnected() && isSpotifyActivityConnected == 1){
-                spotifyAPI = new SpotifyAPI(context, sharedPreferences.getString("TOKEN", ""));
+                SpotifyAPI spotifyAPI = new SpotifyAPI(context, sharedPreferences.getString("TOKEN", ""));
                 spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
                     @Override
                     public void onSuccess(String name, String image_url) {
@@ -438,8 +441,9 @@ public class MainActivity extends AppCompatActivity {
 
                 setCalendar();
 
-                if(AlarmModel.getInstance().isState()){
-                    startService(alarmServiceIntent);
+                if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
+                    AlarmModel.getInstance().setAlarmOff();
+                    startAlarmService();
                 }
             }
         });
@@ -472,8 +476,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void alarmBindingState(){
         binding.btnMusicSelection.setClickable(isNetworkConnected());
-        binding.setAlarmSwitch.setChecked(AlarmModel.getInstance().isState());
-        if(AlarmModel.getInstance().isState()){
+        binding.setAlarmSwitch.setChecked(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON);
+        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
             binding.alarmTimeText.setTextColor(getResources().getColor(R.color.white));
             binding.alarmDateText.setTextColor(getResources().getColor(R.color.white));
             binding.alarmTimeLeftText.setVisibility(View.VISIBLE);
@@ -490,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
         Thread timeLeftThread = new Thread() {
             @Override
             public void run() {
-                while(!MainActivity.this.isDestroyed() && AlarmModel.getInstance().isState()) {
+                while(!MainActivity.this.isDestroyed() && AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
                     try {
                         Log.i(TAG, "Tick");
                         runOnUiThread(new Runnable() {
@@ -511,6 +515,15 @@ public class MainActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
+                            alarmBindingState();
+                        }
+                    }
+                });
             }
         };
 

@@ -10,11 +10,19 @@ public class AlarmModel {
     private static AlarmModel instance;
     private Calendar calendar;
     private String playlist_uri;
-    private boolean state;
+    public enum State {
+        OFF,
+        ON,
+        RINGING
+    }
+
+    private State currentState;
 
     private SpotifyAppRemote spotifyAppRemote;
 
-    private AlarmModel(){}
+    private AlarmModel(){
+        this.currentState = State.OFF;
+    }
 
     public static synchronized AlarmModel getInstance(){
         if(instance == null){
@@ -39,14 +47,6 @@ public class AlarmModel {
         this.playlist_uri = playlist_uri;
     }
 
-    public boolean isState() {
-        return state;
-    }
-
-    public void setState(boolean state) {
-        this.state = state;
-    }
-
     public SpotifyAppRemote getSpotifyAppRemote() {
         return spotifyAppRemote;
     }
@@ -55,11 +55,27 @@ public class AlarmModel {
         this.spotifyAppRemote = spotifyAppRemote;
     }
 
+    public State getCurrentState() {
+        return currentState;
+    }
+
+    public void setAlarmOff() {
+        currentState = State.OFF;
+    }
+
+    public void setAlarmOn() {
+        currentState = State.ON;
+    }
+
+    public void setAlarmRing() {
+        currentState = State.RINGING;
+    }
+
     public HashMap<String, String> getAlarmModelContent(){
         HashMap<String, String> AlarmMap = new HashMap<String, String>();
         AlarmMap.put("Calendar", new SimpleDateFormat("HH:mm:ss").format(this.calendar.getTime()));
         AlarmMap.put("PlaylistUri", this.playlist_uri );
-        AlarmMap.put("State", String.valueOf(this.state) );
+        AlarmMap.put("State", String.valueOf(this.currentState));
         if(this.spotifyAppRemote != null)
             AlarmMap.put("SpotifyAppRemote", String.valueOf(this.spotifyAppRemote.getConnectApi()) );
 
