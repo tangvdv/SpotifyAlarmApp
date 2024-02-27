@@ -267,21 +267,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getUserProfileData(){
-        String data = sharedPreferences.getString("user", "");
-        HashMap<String, String> user = new HashMap<>();
+        HashMap<String, Object> user = AlarmSharedPreferences.loadUser(context);
 
-        if(!Objects.equals(data, "")){
-            try {
-                JSONObject jsonData = new JSONObject(data);
-
-                user.put("image", jsonData.getString("image"));
-                user.put("name", jsonData.getString("name"));
-
-                setUserProfileView(user);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        if(!user.isEmpty()){
+            setUserProfileView(user);
         }
         else {
             if(isNetworkConnected() && isSpotifyActivityConnected == 1){
@@ -289,13 +278,10 @@ public class MainActivity extends AppCompatActivity {
                 spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
                     @Override
                     public void onSuccess(String name, String image_url) {
+                        HashMap<String, Object> user = new HashMap<String, Object>();
                         user.put("image", image_url);
                         user.put("name", name);
-
-                        JSONObject jsonUser = new JSONObject(user);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString("user", jsonUser.toString());
-                        editor.apply();
+                        AlarmSharedPreferences.saveUser(context, user);
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -314,9 +300,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setUserProfileView(HashMap<String, String> user){
+    private void setUserProfileView(HashMap<String, Object> user){
         Glide.with(context)
-                .load(user.get("image"))
+                .load( (String) user.get("image"))
                 .apply(new RequestOptions()
                         .transform(new CenterCrop(), new CircleCrop())
                 )
@@ -330,9 +316,9 @@ public class MainActivity extends AppCompatActivity {
         UserProfileDialogBinding binding = UserProfileDialogBinding.inflate(LayoutInflater.from(context));
         userProfileDialog.setContentView(binding.getRoot());
 
-        binding.textUserProfile.setText(user.get("name"));
+        binding.textUserProfile.setText( (String) user.get("name"));
         Glide.with(context)
-                .load(user.get("image"))
+                .load( (String) user.get("image"))
                 .apply(new RequestOptions()
                         .transform(new CenterCrop(), new CircleCrop())
                 )

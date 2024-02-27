@@ -293,7 +293,7 @@ public class MusicLibraryActivity extends AppCompatActivity {
     }
 
     private void onClickLibraryButton(MusicModel musicModel){
-        AlarmSharedPreferences.saveAlarm(context, musicModel.getMusicModelContent());
+        AlarmSharedPreferences.saveMusic(context, musicModel.getMusicModelContent());
         setResultActivity(Activity.RESULT_OK, "");
     }
 
