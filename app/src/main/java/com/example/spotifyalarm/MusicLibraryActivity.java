@@ -62,7 +62,7 @@ public class MusicLibraryActivity extends AppCompatActivity {
             musicModelList = new ArrayList<>();
 
             SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
-            token = sharedPreferences.getString("TOKEN", null);
+            token = AlarmSharedPreferences.loadToken(context);
             if(token != null){
                 getLibrary(token);
             }

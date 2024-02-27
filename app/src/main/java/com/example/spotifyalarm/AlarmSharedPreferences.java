@@ -18,10 +18,28 @@ public class AlarmSharedPreferences {
         sharedPreferences = context.getSharedPreferences("App", Context.MODE_PRIVATE);
     }
 
-    private static void saveSharedPreferences(String tag, String data){
+    private static void saveSharedPreferences(Context context, String tag, String data){
+        if(sharedPreferences == null) loadSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(tag, data);
         editor.apply();
+    }
+
+    public static void clearSharedPreferences(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
+    }
+
+    public static String loadToken(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        return sharedPreferences.getString("TOKEN", "");
+    }
+
+    public static void saveToken(Context context, String token){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        saveSharedPreferences(context, "TOKEN", token);
     }
 
     public static HashMap<String, Object> loadSettings(Context context){
@@ -32,7 +50,7 @@ public class AlarmSharedPreferences {
 
     public static void saveSettings(Context context, HashMap<String, Object> data){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        saveSharedPreferences("settings", HashToJsonString(data));
+        saveSharedPreferences(context, "settings", HashToJsonString(data));
     }
 
     public static HashMap<String, Object> loadAlarm(Context context){
@@ -43,7 +61,7 @@ public class AlarmSharedPreferences {
 
     public static void saveAlarm(Context context, HashMap<String, Object> data){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        saveSharedPreferences("alarm", HashToJsonString(data));
+        saveSharedPreferences(context, "alarm", HashToJsonString(data));
     }
 
     public static HashMap<String, Object> loadMusic(Context context){
@@ -54,7 +72,7 @@ public class AlarmSharedPreferences {
 
     public static void saveMusic(Context context, HashMap<String, Object> data){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        saveSharedPreferences("music", HashToJsonString(data));
+        saveSharedPreferences(context, "music", HashToJsonString(data));
     }
 
     public static HashMap<String, Object> loadUser(Context context){
@@ -65,7 +83,7 @@ public class AlarmSharedPreferences {
 
     public static void saveUser(Context context, HashMap<String, Object> data){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        saveSharedPreferences("user", HashToJsonString(data));
+        saveSharedPreferences(context, "user", HashToJsonString(data));
     }
 
     private static HashMap<String, Object> JsonToHashMap(String json){

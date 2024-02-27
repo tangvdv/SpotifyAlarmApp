@@ -253,9 +253,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
             if (response.getType() == AuthorizationResponse.Type.TOKEN) {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("TOKEN", response.getAccessToken());
-                editor.apply();
+                AlarmSharedPreferences.saveToken(context, response.getAccessToken());
                 isSpotifyActivityConnected = 1;
             }
             else{
@@ -274,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else {
             if(isNetworkConnected() && isSpotifyActivityConnected == 1){
-                SpotifyAPI spotifyAPI = new SpotifyAPI(context, sharedPreferences.getString("TOKEN", ""));
+                SpotifyAPI spotifyAPI = new SpotifyAPI(context, AlarmSharedPreferences.loadToken(context));
                 spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
                     @Override
                     public void onSuccess(String name, String image_url) {
@@ -347,10 +345,7 @@ public class MainActivity extends AppCompatActivity {
                 userProfileDialog.dismiss();
 
                 AuthorizationClient.clearCookies(context);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.clear();
-                editor.apply();
-
+                AlarmSharedPreferences.clearSharedPreferences(context);
                 Intent intent = new Intent(context, MainActivity.class);
                 startActivity(intent);
                 finishAffinity();
