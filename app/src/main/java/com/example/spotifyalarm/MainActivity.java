@@ -355,6 +355,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setPlaylistLayout(){
         HashMap<String, Object> music = AlarmSharedPreferences.loadMusic(context);
+        AlarmModel.getInstance().setPlaylist_uri( (String) music.get("uri") );
         if(!music.isEmpty()){
             binding.textPlaylistName.setText( (String) music.get("name"));
             binding.textPlaylistOwner.setText( (String) music.get("type"));
