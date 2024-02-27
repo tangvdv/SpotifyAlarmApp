@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package com.example.spotifyalarm.model;
 
 public class MusicModel {
     private String id;

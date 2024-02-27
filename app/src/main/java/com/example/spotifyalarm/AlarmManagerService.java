@@ -19,11 +19,10 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
+import com.example.spotifyalarm.model.AlarmModel;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
-
-import java.util.Calendar;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
@@ -113,27 +112,24 @@ public class AlarmManagerService extends Service {
         Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Calendar calendar = AlarmModel.getInstance().getCalendar();
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             alarmManager.canScheduleExactAlarms();
         }
 
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, AlarmModel.getInstance().getCalendar().getTimeInMillis(), pendingIntent);
 
         createNotification();
 
         AlarmModel.getInstance().setAlarmOn();
 
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
+
+        stopSelf();
     }
 
     @Override
     public void onDestroy() {
-        if(AlarmModel.getInstance().getCurrentState() != AlarmModel.State.OFF){
-            AlarmModel.getInstance().setAlarmOff();
-        }
-
+        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
         super.onDestroy();
     }
 

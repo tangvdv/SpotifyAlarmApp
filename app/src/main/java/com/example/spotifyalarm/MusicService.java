@@ -10,6 +10,8 @@ import android.media.AudioManager;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.example.spotifyalarm.model.AlarmModel;
+import com.example.spotifyalarm.model.SettingsModel;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.CallResult;
@@ -24,6 +26,8 @@ import java.util.Objects;
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
     private SpotifyAppRemote mySpotifyAppRemote;
+
+    private SettingsModel settingsModel;
     private boolean nextAlarm = false;
     private int stopAlarm;
     private boolean isPaused = true;
@@ -31,6 +35,9 @@ public class MusicService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
+
+        AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
+
         mySpotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
             play();
@@ -62,49 +69,36 @@ public class MusicService extends Service {
             Log.e(TAG, "SpotifyPlayerApi object null");
         }
 
-        if(nextAlarm) setNextAlarm();
+        if(settingsModel.isRepeat()) setNextAlarm();
         else{
+            AlarmModel.getInstance().setAlarmOff();
             stopService(new Intent(this, AlarmManagerService.class));
-
         }
 
         this.stopSelf();
     }
 
     private void setNextAlarm(){
-        Intent alarmServiceIntent = new Intent(this, AlarmManagerService.class);
-
         Calendar calendar = AlarmModel.getInstance().getCalendar();
-        calendar.add(Calendar.DATE, 1);
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
         AlarmModel.getInstance().setCalendar(calendar);
 
+        Intent alarmServiceIntent = new Intent(this, AlarmManagerService.class);
         startForegroundService(alarmServiceIntent);
     }
 
+
     private void applySettings(){
-        try {
-            SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
-            String data = sharedPreferences.getString("settings", "");
-            if(!Objects.equals(data, "")){
-                JSONObject jsonData = new JSONObject(data);
-                Log.i(TAG, jsonData.toString());
-                mySpotifyAppRemote.getPlayerApi().setShuffle(Boolean.parseBoolean(jsonData.getString("shuffle")));
+        settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
+        Log.i(TAG, String.valueOf(settingsModel.getSettingsModelContent()));
 
-                if(Boolean.parseBoolean(jsonData.getString("repeat"))){
-                    nextAlarm = true;
-                }
+        mySpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
 
-                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-                am.setStreamVolume(AudioManager.STREAM_ALARM, jsonData.getInt("volume"), 0);
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
 
-                int[] stopAlarmValues = getResources().getIntArray(R.array.stop_alarm_values);
-                stopAlarm = stopAlarmValues[jsonData.getInt("stopAlarm")];
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-            Log.e(TAG, e.toString());
-        }
+        int[] stopAlarmValues = getResources().getIntArray(R.array.stop_alarm_values);
+        stopAlarm = stopAlarmValues[settingsModel.getStopAlarm()];
     }
 
     private void stopAlarmTimeLeftThread(){

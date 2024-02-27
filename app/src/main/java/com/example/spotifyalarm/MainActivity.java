@@ -32,6 +32,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMainBinding;
 import com.example.spotifyalarm.databinding.UserProfileDialogBinding;
+import com.example.spotifyalarm.model.AlarmModel;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
@@ -53,11 +54,8 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private Dialog userProfileDialog;
     private MaterialTimePicker timePicker;
-    private Calendar calendar;
     private Intent alarmServiceIntent;
     private SharedPreferences sharedPreferences;
-    private int hour;
-    private int minute;
     private int isSpotifyActivityConnected;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
@@ -99,16 +97,15 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        context = this;
+
         isSpotifyActivityConnected = -1;
 
         sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
 
         alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
-        hour = sharedPreferences.getInt("time_hour", 0);
-        minute = sharedPreferences.getInt("time_minute", 0);
-
-        context = this;
+        AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
 
         setupActivityViews();
     }
@@ -150,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
                         bindingManager();
 
                         setCalendar();
+                        alarmTextValue();
                         alarmBindingState();
                     }
                 });
@@ -193,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else{
                     if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
+                        AlarmModel.getInstance().setAlarmOff();
                         stopService(alarmServiceIntent);
                     }
                 }
@@ -421,8 +420,8 @@ public class MainActivity extends AppCompatActivity {
     private void selectTime(){
         timePicker = new MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_24H)
-                .setHour(hour)
-                .setMinute(minute)
+                .setHour(AlarmModel.getInstance().getHour())
+                .setMinute(AlarmModel.getInstance().getMinute())
                 .setTitleText("Select Alarm Time")
                 .setTheme(R.style.ThemeOverlay_App_MaterialTimePicker)
                 .build();
@@ -432,14 +431,11 @@ public class MainActivity extends AppCompatActivity {
         timePicker.addOnPositiveButtonClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                hour = timePicker.getHour();
-                minute = timePicker.getMinute();
-                editor.putInt("time_hour", timePicker.getHour());
-                editor.putInt("time_minute", timePicker.getMinute());
-                editor.apply();
+                AlarmModel.getInstance().setHour(timePicker.getHour());
+                AlarmModel.getInstance().setMinute(timePicker.getMinute());
 
                 setCalendar();
+                alarmTextValue();
 
                 if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                     AlarmModel.getInstance().setAlarmOff();
@@ -450,9 +446,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setCalendar(){
-        calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, minute);
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, AlarmModel.getInstance().getHour());
+        calendar.set(Calendar.MINUTE, AlarmModel.getInstance().getMinute());
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         if(calendar.getTimeInMillis() < System.currentTimeMillis()){
@@ -460,14 +456,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         AlarmModel.getInstance().setCalendar(calendar);
-
-        alarmTextValue();
     }
 
     private void alarmTextValue(){
-        if(calendar != null) {
-            binding.alarmTimeText.setText(new SimpleDateFormat("HH:mm").format(calendar.getTime()));
-            binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(calendar.getTime()));
+        if(AlarmModel.getInstance().getCalendar() != null) {
+            String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
+            String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
+            binding.alarmTimeText.setText(String.format("%s:%s", formattedHour, formattedMinute));
+            binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(AlarmModel.getInstance().getCalendar().getTime()));
         }else{
             binding.alarmTimeText.setVisibility(View.GONE);
             binding.alarmDateText.setVisibility(View.GONE);
@@ -479,13 +475,11 @@ public class MainActivity extends AppCompatActivity {
         binding.setAlarmSwitch.setChecked(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON);
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
             binding.alarmTimeText.setTextColor(getResources().getColor(R.color.white));
-            binding.alarmDateText.setTextColor(getResources().getColor(R.color.white));
             binding.alarmTimeLeftText.setVisibility(View.VISIBLE);
             alarmTimeLeftThread();
         }
         else{
             binding.alarmTimeText.setTextColor(getResources().getColor(R.color.light_grey));
-            binding.alarmDateText.setTextColor(getResources().getColor(R.color.light_grey));
             binding.alarmTimeLeftText.setVisibility(View.GONE);
         }
     }
@@ -500,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - calendar.getTimeInMillis());
+                                long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - AlarmModel.getInstance().getCalendar().getTimeInMillis() );
 
                                 long hours = diffInMillies / (60 * 60 * 1000);
                                 long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
@@ -539,6 +533,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         AuthorizationClient.stopLoginActivity(this, context.getResources().getInteger(R.integer.request_code));
+        AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
         super.onDestroy();
     }
 
