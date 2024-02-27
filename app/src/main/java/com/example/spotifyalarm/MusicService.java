@@ -135,4 +135,10 @@ public class MusicService extends Service {
 
         stopAlarmThread.start();
     }
+
+    @Override
+    public void onDestroy() {
+        AlarmWakeLock.releaseAlarmWakeLock();
+        super.onDestroy();
+    }
 }

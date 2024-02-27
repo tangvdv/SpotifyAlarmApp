@@ -8,6 +8,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        AlarmWakeLock.acquireAlarmWakeLock(context);
         Intent serviceIntent = new Intent(context, MusicService.class);
         context.startService(serviceIntent);
     }

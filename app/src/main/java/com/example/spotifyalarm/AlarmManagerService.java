@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -29,7 +28,6 @@ import java.util.Calendar;
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
     private int spotifyConnectionTryAmount = 5;
-    PowerManager.WakeLock wakeLock;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -61,9 +59,10 @@ public class AlarmManagerService extends Service {
 
         long notificationId = System.currentTimeMillis();
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-        Notification notification = notificationBuilder.setOngoing(true)
+        Notification notification = notificationBuilder
+                .setOngoing(true)
                 .setContentTitle("Alarm is running")
-                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .setPriority(NotificationManager.IMPORTANCE_MAX)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build();
 
@@ -110,12 +109,6 @@ public class AlarmManagerService extends Service {
     }
 
     public void setAlarm(){
-        long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - AlarmModel.getInstance().getCalendar().getTimeInMillis());
-
-        PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SpotifyAlarm::AlarmWakeLock");
-        wakeLock.acquire(diffInMillies + 60000);
-        
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlarmReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -138,9 +131,6 @@ public class AlarmManagerService extends Service {
     @Override
     public void onDestroy() {
         if(AlarmModel.getInstance().getCurrentState() != AlarmModel.State.OFF){
-            if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
-                wakeLock.release();
-            }
             AlarmModel.getInstance().setAlarmOff();
         }
 
