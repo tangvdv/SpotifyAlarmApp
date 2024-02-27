@@ -1,5 +1,8 @@
 package com.example.spotifyalarm.model;
 
+import java.util.HashMap;
+import java.util.Objects;
+
 public class MusicModel {
     private String id;
     private String name;
@@ -61,5 +64,19 @@ public class MusicModel {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public HashMap<String, Object> getMusicModelContent(){
+        HashMap<String, Object> map = new HashMap<String, Object>();
+        map.put("image",this.image_url);
+        map.put("name",this.name);
+        String type = this.type.substring(0, 1).toUpperCase() + this.type.substring(1).toLowerCase();
+        if(!Objects.equals(this.type, "artist")){
+            type = type.concat(" · " + String.join(", ", this.owner_name));
+        }
+        map.put("type", type);
+        map.put("uri", this.music_uri);
+
+        return map;
     }
 }

@@ -33,6 +33,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMainBinding;
 import com.example.spotifyalarm.databinding.UserProfileDialogBinding;
 import com.example.spotifyalarm.model.AlarmModel;
+import com.example.spotifyalarm.model.MusicModel;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
@@ -64,17 +65,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onActivityResult(ActivityResult result) {
                     if (result.getResultCode() == Activity.RESULT_OK) {
-                        Intent data = result.getData();
-                        if(data != null && data.getExtras() != null){
-                            String music =  data.getStringExtra("Data");
-                            if(!Objects.equals(music, "")){
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("music", music);
-                                editor.apply();
-                            }
-
-                            getMusicData();
-                        }
+                        setPlaylistLayout();
                     }
                     else if(result.getResultCode() == Activity.RESULT_CANCELED){
                         Intent data = result.getData();
@@ -142,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                         binding.progressBar.setVisibility(View.GONE);
 
                         getUserProfileData();
-                        getMusicData();
+                        setPlaylistLayout();
 
                         bindingManager();
 
@@ -381,32 +372,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void getMusicData(){
-        HashMap<String, String> music = new HashMap<>();
-        try {
-            String data = sharedPreferences.getString("music", "");
-            if(!Objects.equals(data, "")){
-                JSONObject jsonData = new JSONObject(data);
-
-                music.put("image", jsonData.getString("image"));
-                music.put("name", jsonData.getString("name"));
-                music.put("type", jsonData.getString("type"));
-                AlarmModel.getInstance().setPlaylist_uri(jsonData.getString("uri"));
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        setPlaylistLayout(music);
-    }
-
-    private void setPlaylistLayout(HashMap<String, String> data){
-        if(data != null && !data.isEmpty()){
-            binding.textPlaylistName.setText(data.get("name"));
-            binding.textPlaylistOwner.setText(data.get("type"));
+    private void setPlaylistLayout(){
+        HashMap<String, Object> music = AlarmSharedPreferences.loadMusic(context);
+        if(!music.isEmpty()){
+            binding.textPlaylistName.setText( (String) music.get("name"));
+            binding.textPlaylistOwner.setText( (String) music.get("type"));
             Glide.with(context)
-                    .load(data.get("image"))
+                    .load( (String) music.get("image"))
                     .apply(new RequestOptions()
                             .transform(new CenterCrop(), new RoundedCorners(10))
                     )

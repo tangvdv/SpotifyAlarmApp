@@ -46,6 +46,17 @@ public class AlarmSharedPreferences {
         saveSharedPreferences("alarm", HashToJsonString(data));
     }
 
+    public static HashMap<String, Object> loadMusic(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        String data = sharedPreferences.getString("music", "");
+        return JsonToHashMap(data);
+    }
+
+    public static void saveMusic(Context context, HashMap<String, Object> data){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        saveSharedPreferences("music", HashToJsonString(data));
+    }
+
     private static HashMap<String, Object> JsonToHashMap(String json){
         HashMap<String, Object> map = new HashMap<String, Object>();
 

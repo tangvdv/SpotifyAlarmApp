@@ -23,6 +23,7 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityLibraryBinding;
+import com.example.spotifyalarm.model.AlarmModel;
 import com.example.spotifyalarm.model.MusicModel;
 
 import org.json.JSONObject;
@@ -292,13 +293,8 @@ public class MusicLibraryActivity extends AppCompatActivity {
     }
 
     private void onClickLibraryButton(MusicModel musicModel){
-        String data = musicToJsonString(musicModel);
-        if(!Objects.equals(data, "")){
-            setResultActivity(Activity.RESULT_OK, data);
-        }
-        else{
-            setResultActivity(Activity.RESULT_CANCELED, "");
-        }
+        AlarmSharedPreferences.saveAlarm(context, musicModel.getMusicModelContent());
+        setResultActivity(Activity.RESULT_OK, "");
     }
 
     private void setResultActivity(int type, String message){
@@ -307,22 +303,6 @@ public class MusicLibraryActivity extends AppCompatActivity {
         setResult(type, resultIntent);
 
         finish();
-    }
-
-    private String musicToJsonString(MusicModel musicModel){
-        Map<String, String> music = new HashMap<>();
-        music.put("image", musicModel.getImage_url());
-        music.put("name", musicModel.getName());
-        String type = musicModel.getType().substring(0, 1).toUpperCase() + musicModel.getType().substring(1).toLowerCase();
-        if(!Objects.equals(musicModel.getType(), "artist")){
-            type = type.concat(" · " + String.join(", ", musicModel.getOwnerName()));
-        }
-        music.put("type", type);
-        music.put("uri", musicModel.getMusicUri());
-
-        JSONObject jsonMusic = new JSONObject(music);
-
-        return jsonMusic.toString();
     }
 
     private boolean isNetworkConnected() {
