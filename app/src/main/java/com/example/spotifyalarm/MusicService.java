@@ -5,45 +5,61 @@ import static java.lang.Thread.sleep;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.IBinder;
 import android.util.Log;
 
 import com.example.spotifyalarm.model.AlarmModel;
 import com.example.spotifyalarm.model.SettingsModel;
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.types.PlayerState;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Calendar;
-import java.util.Objects;
 
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
     private SpotifyAppRemote mySpotifyAppRemote;
 
+    private LogFile logFile;
+
     private SettingsModel settingsModel;
-    private boolean nextAlarm = false;
     private int stopAlarm;
     private boolean isPaused = true;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
-
+        logFile = new LogFile(this);
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
-
-        mySpotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
-            play();
+            setSpotifyAppRemote();
         }
 
         return START_STICKY;
+    }
+
+    private void setSpotifyAppRemote(){
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(this.getString(R.string.client_id))
+                        .setRedirectUri(this.getString(R.string.redirect_uri))
+                        .build();
+        SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
+            @Override
+            public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
+                mySpotifyAppRemote = spotifyAppRemote;
+                play();
+            }
+            @Override
+            public void onFailure(Throwable throwable) {
+                logFile.writeToFile(TAG, throwable.getMessage());
+                Log.e(TAG, throwable.getMessage(), throwable);
+            }
+        });
     }
 
     @Override
@@ -53,29 +69,30 @@ public class MusicService extends Service {
 
     private void play(){
         applySettings();
+
         String uri = AlarmModel.getInstance().getPlaylist_uri();
         if(mySpotifyAppRemote != null && !uri.equals("")){
             mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
-            Log.i(TAG, "Play");
+            Log.v(TAG, "Play");
+            logFile.writeToFile(TAG, "Play");
             AlarmModel.getInstance().setAlarmRing();
             isPaused = false;
 
+            /*
             if(stopAlarm != 0){
                 stopAlarmTimeLeftThread();
             }
+             */
         }
         else{
             Log.e(TAG, "SpotifyPlayerApi object null");
         }
 
         if(settingsModel.isRepeat()) setNextAlarm();
-        else{
-            AlarmModel.getInstance().setAlarmOff();
-            stopService(new Intent(this, AlarmManagerService.class));
-        }
+        else AlarmModel.getInstance().setAlarmOff();
 
-        this.stopSelf();
+        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
     }
 
     private void setNextAlarm(){
@@ -87,10 +104,9 @@ public class MusicService extends Service {
         startForegroundService(alarmServiceIntent);
     }
 
-
     private void applySettings(){
         settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
-        Log.i(TAG, String.valueOf(settingsModel.getSettingsModelContent()));
+        Log.v(TAG, String.valueOf(settingsModel.getSettingsModelContent()));
 
         mySpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
 

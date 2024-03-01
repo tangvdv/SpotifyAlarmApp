@@ -20,13 +20,9 @@ import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
 import com.example.spotifyalarm.model.AlarmModel;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
-    private int spotifyConnectionTryAmount = 5;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -34,11 +30,7 @@ public class AlarmManagerService extends Service {
 
         if(isNetworkConnected()){
             if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF || AlarmModel.getInstance().getCurrentState() == AlarmModel.State.RINGING){
-                if(AlarmModel.getInstance().getSpotifyAppRemote() == null || !AlarmModel.getInstance().getSpotifyAppRemote().isConnected()) {
-                    setSpotifyAppRemote();
-                }
-                else
-                    setAlarm();
+                setAlarm();
             }
         }
         else{
@@ -56,50 +48,20 @@ public class AlarmManagerService extends Service {
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         manager.createNotificationChannel(chan);
 
-        long notificationId = System.currentTimeMillis();
+        String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
+        String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
+
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
         Notification notification = notificationBuilder
+                .setSmallIcon(R.mipmap.app_logo)
                 .setOngoing(true)
                 .setContentTitle("Alarm is running")
-                .setPriority(NotificationManager.IMPORTANCE_MAX)
-                .setCategory(Notification.CATEGORY_SERVICE)
+                .setContentText("Time : "+String.format("%s:%s", formattedHour, formattedMinute))
+                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .setCategory(Notification.CATEGORY_ALARM)
                 .build();
 
-        startForeground((int) notificationId, notification);
-    }
-
-    private void setSpotifyAppRemote(){
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(this.getString(R.string.client_id))
-                        .setRedirectUri(this.getString(R.string.redirect_uri))
-                        .showAuthView(true)
-                        .build();
-        Log.i(TAG, "setSpotifyAppRemote");
-        SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
-            @Override
-            public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                Log.i(TAG, "SpotifyAppRemote on connected");
-                AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
-                spotifyConnectionTryAmount = 5;
-                if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
-                    setAlarm();
-                }
-            }
-            @Override
-            public void onFailure(Throwable throwable) {
-                Log.e(TAG, throwable.getMessage(), throwable);
-                if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
-                    if(spotifyConnectionTryAmount > 0){
-                        setSpotifyAppRemote();
-                        spotifyConnectionTryAmount--;
-                    }
-                    else{
-                        errorUserToast("Error : Too many attempts connecting to spotify app remote");
-                        onDestroy();
-                    }
-                }
-            }
-        });
+        startForeground(42, notification);
     }
 
     @Override
@@ -123,14 +85,6 @@ public class AlarmManagerService extends Service {
         AlarmModel.getInstance().setAlarmOn();
 
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
-
-        stopSelf();
-    }
-
-    @Override
-    public void onDestroy() {
-        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
-        super.onDestroy();
     }
 
     private void errorUserToast(String text){
