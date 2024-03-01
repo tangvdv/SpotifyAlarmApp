@@ -33,15 +33,11 @@ import com.bumptech.glide.request.RequestOptions;
 import com.example.spotifyalarm.databinding.ActivityMainBinding;
 import com.example.spotifyalarm.databinding.UserProfileDialogBinding;
 import com.example.spotifyalarm.model.AlarmModel;
-import com.example.spotifyalarm.model.MusicModel;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -204,6 +200,8 @@ public class MainActivity extends AppCompatActivity {
                                 alarmBindingState();
                             }
                         });
+
+                        saveAlarm();
                     }
                 };
                 thread.start();
@@ -390,6 +388,7 @@ public class MainActivity extends AppCompatActivity {
 
                 setCalendar();
                 alarmTextValue();
+                saveAlarm();
 
                 if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                     AlarmModel.getInstance().setAlarmOff();
@@ -487,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         AuthorizationClient.stopLoginActivity(this, context.getResources().getInteger(R.integer.request_code));
-        AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
+        saveAlarm();
         super.onDestroy();
     }
 
@@ -495,5 +494,9 @@ public class MainActivity extends AppCompatActivity {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
+    }
+
+    private void saveAlarm(){
+        AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
     }
 }
