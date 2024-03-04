@@ -121,6 +121,7 @@
                 android:textSize="20sp" />
         </RelativeLayout>
 
+        <!--
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="60dp">
@@ -150,6 +151,7 @@
                 android:theme="@style/Spinner"
                 android:entries="@array/stop_alarm_entries"/>
         </RelativeLayout>
+        -->
 
         <View
             android:layout_width="match_parent"

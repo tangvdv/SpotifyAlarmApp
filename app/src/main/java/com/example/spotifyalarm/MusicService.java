@@ -29,7 +29,7 @@ public class MusicService extends Service {
     private LogFile logFile;
 
     private SettingsModel settingsModel;
-    private int stopAlarm;
+    //private int stopAlarm;
     private boolean isPaused = true;
 
     @Override
@@ -117,10 +117,13 @@ public class MusicService extends Service {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
 
+        /*
         int[] stopAlarmValues = getResources().getIntArray(R.array.stop_alarm_values);
         stopAlarm = stopAlarmValues[settingsModel.getStopAlarm()];
+         */
     }
 
+    /*
     private void stopAlarmTimeLeftThread(){
         Thread stopAlarmThread = new Thread(new Runnable() {
             @Override
@@ -149,6 +152,7 @@ public class MusicService extends Service {
 
         stopAlarmThread.start();
     }
+     */
 
     @Override
     public void onDestroy() {
