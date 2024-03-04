@@ -90,9 +90,11 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
+        int min = 1;
         binding.seekBarSoundVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                if(i < min) binding.seekBarSoundVolume.setProgress(min);
                 settingsModel.setVolume(i);
             }
 
