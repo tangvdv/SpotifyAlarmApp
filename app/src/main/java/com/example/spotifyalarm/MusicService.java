@@ -7,7 +7,11 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -28,6 +32,12 @@ public class MusicService extends Service {
 
     private LogFile logFile;
 
+    private boolean hasSpotifyRemoteResponded;
+    private boolean isBackupAlarmPlayed;
+    private int remoteCheckSecondsLeft;
+
+    private MediaPlayer mediaPlayer;
+
     private SettingsModel settingsModel;
     //private int stopAlarm;
     private boolean isPaused = true;
@@ -36,9 +46,12 @@ public class MusicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
         logFile = new LogFile(this);
+        hasSpotifyRemoteResponded = false;
+        isBackupAlarmPlayed = false;
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
             setSpotifyAppRemote();
+            spotifyRemoteCheckThread();
         }
 
         return START_STICKY;
@@ -52,14 +65,21 @@ public class MusicService extends Service {
         SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
             @Override
             public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
-                mySpotifyAppRemote = spotifyAppRemote;
-                play();
+                if(!isBackupAlarmPlayed){
+                    logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
+                    mySpotifyAppRemote = spotifyAppRemote;
+                    playSpotifyAlarm();
+                    hasSpotifyRemoteResponded = true;
+                }
             }
             @Override
             public void onFailure(Throwable throwable) {
                 logFile.writeToFile(TAG, throwable.getMessage());
                 Log.e(TAG, throwable.getMessage(), throwable);
+                if(!isBackupAlarmPlayed){
+                    hasSpotifyRemoteResponded = true;
+                    playBackupAlarm();
+                }
             }
         });
     }
@@ -69,15 +89,16 @@ public class MusicService extends Service {
         return null;
     }
 
-    private void play(){
-        applySettings();
-
+    private void playSpotifyAlarm(){
         String uri = AlarmModel.getInstance().getPlaylist_uri();
-        if(mySpotifyAppRemote != null && !uri.equals("")){
+        if(!uri.equals("")){
+            applySettings();
+            mySpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
+
             mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
-            Log.v(TAG, "Play");
-            logFile.writeToFile(TAG, "Play");
+            Log.v(TAG, "SpotifyAlarmPlay");
+            logFile.writeToFile(TAG, "SpotifyAlarmPlay");
             AlarmModel.getInstance().setAlarmRing();
             isPaused = false;
 
@@ -89,14 +110,10 @@ public class MusicService extends Service {
         }
         else{
             Log.e(TAG, "SpotifyPlayerApi object null");
+            playBackupAlarm();
         }
 
-        stopService(new Intent(this, AlarmNotificationService.class));
-
-        if(settingsModel.isRepeat()) setNextAlarm();
-        else AlarmModel.getInstance().setAlarmOff();
-
-        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
+        alarmEnding();
     }
 
     private void setNextAlarm(){
@@ -111,8 +128,6 @@ public class MusicService extends Service {
     private void applySettings(){
         settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
         Log.v(TAG, String.valueOf(settingsModel.getSettingsModelContent()));
-
-        mySpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
 
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
@@ -153,6 +168,64 @@ public class MusicService extends Service {
         stopAlarmThread.start();
     }
      */
+
+    private void spotifyRemoteCheckThread(){
+        remoteCheckSecondsLeft = 60;
+        Thread spotifyRemoteCheck = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!hasSpotifyRemoteResponded && remoteCheckSecondsLeft > 0){
+                    try {
+                        sleep(1000);
+                        remoteCheckSecondsLeft -= 1;
+                        Log.v(TAG, remoteCheckSecondsLeft + "seconds left until alarm backup plays");
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                if(!hasSpotifyRemoteResponded && remoteCheckSecondsLeft <= 0){
+                    isBackupAlarmPlayed = true;
+                    playBackupAlarm();
+                }
+            }
+        });
+        spotifyRemoteCheck.start();
+    }
+
+    private void playBackupAlarm(){
+        applySettings();
+
+        mediaPlayer = MediaPlayer.create(this, R.raw.flowers_to_the_moon);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+
+        Log.v(TAG, mediaPlayer.toString());
+        mediaPlayer.setAudioAttributes(audioAttributes);
+        mediaPlayer.start();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+            }
+        });
+
+        Log.v(TAG, "BackupAlarmPlay");
+        logFile.writeToFile(TAG, "BackupAlarmPlay");
+        alarmEnding();
+    }
+
+    private void alarmEnding(){
+        stopService(new Intent(this, AlarmNotificationService.class));
+
+        if(settingsModel.isRepeat()) setNextAlarm();
+        else AlarmModel.getInstance().setAlarmOff();
+
+        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
+    }
 
     @Override
     public void onDestroy() {
