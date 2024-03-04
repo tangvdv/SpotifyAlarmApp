@@ -2,6 +2,8 @@ package com.example.spotifyalarm;
 
 import static java.lang.Thread.sleep;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -88,6 +90,8 @@ public class MusicService extends Service {
         else{
             Log.e(TAG, "SpotifyPlayerApi object null");
         }
+
+        stopService(new Intent(this, AlarmNotificationService.class));
 
         if(settingsModel.isRepeat()) setNextAlarm();
         else AlarmModel.getInstance().setAlarmOff();
