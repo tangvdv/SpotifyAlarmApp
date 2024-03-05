@@ -10,6 +10,6 @@ public class AlarmReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         AlarmWakeLock.acquireAlarmWakeLock(context);
         Intent serviceIntent = new Intent(context, MusicService.class);
-        context.startService(serviceIntent);
+        context.startForegroundService(serviceIntent);
     }
 }

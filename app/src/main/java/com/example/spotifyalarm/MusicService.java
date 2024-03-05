@@ -4,16 +4,17 @@ import static java.lang.Thread.sleep;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
 
 import com.example.spotifyalarm.model.AlarmModel;
 import com.example.spotifyalarm.model.SettingsModel;
@@ -21,8 +22,6 @@ import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
-import com.spotify.protocol.client.CallResult;
-import com.spotify.protocol.types.PlayerState;
 
 import java.util.Calendar;
 
@@ -50,6 +49,8 @@ public class MusicService extends Service {
         isBackupAlarmPlayed = false;
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
+            stopService(new Intent(this, AlarmNotificationService.class));
+            startForeground(1, createNotification());
             setSpotifyAppRemote();
             spotifyRemoteCheckThread();
         }
@@ -57,11 +58,30 @@ public class MusicService extends Service {
         return START_STICKY;
     }
 
+    private Notification createNotification(){
+        Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        String NOTIFICATION_CHANNEL_ID = "example.permanence";
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.mipmap.app_logo)
+                .setOngoing(true)
+                .setContentTitle("Alarm is ringing ! Click to shut alarm off")
+                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .setContentIntent(pendingIntent)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .addAction(R.mipmap.app_logo, "Stop", pendingIntent);
+
+        return notificationBuilder.build();
+    }
+
     private void setSpotifyAppRemote(){
         ConnectionParams connectionParams =
                 new ConnectionParams.Builder(this.getString(R.string.client_id))
                         .setRedirectUri(this.getString(R.string.redirect_uri))
                         .build();
+        logFile.writeToFile(TAG, "SetSpotifyAppRemote");
         SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
             @Override
             public void onConnected(SpotifyAppRemote spotifyAppRemote) {
@@ -171,6 +191,7 @@ public class MusicService extends Service {
 
     private void spotifyRemoteCheckThread(){
         remoteCheckSecondsLeft = 60;
+        logFile.writeToFile(TAG, "StartRemoteCheckThread");
         Thread spotifyRemoteCheck = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -178,6 +199,7 @@ public class MusicService extends Service {
                     try {
                         sleep(1000);
                         remoteCheckSecondsLeft -= 1;
+                        logFile.writeToFile(TAG, remoteCheckSecondsLeft + "seconds left until alarm backup plays");
                         Log.v(TAG, remoteCheckSecondsLeft + "seconds left until alarm backup plays");
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
@@ -219,8 +241,6 @@ public class MusicService extends Service {
     }
 
     private void alarmEnding(){
-        stopService(new Intent(this, AlarmNotificationService.class));
-
         if(settingsModel.isRepeat()) setNextAlarm();
         else AlarmModel.getInstance().setAlarmOff();
 
@@ -230,6 +250,8 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         AlarmWakeLock.releaseAlarmWakeLock();
+        mediaPlayer.stop();
+        mediaPlayer.release();
         super.onDestroy();
     }
 }

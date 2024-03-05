@@ -14,27 +14,28 @@ import com.example.spotifyalarm.model.AlarmModel;
 public class AlarmNotificationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        createNotification();
-        return super.onStartCommand(intent, flags, startId);
+        Notification notification = createNotification();
+        startForeground(42, notification);
+
+        return START_STICKY;
     }
 
-    private void createNotification(){
+    private Notification createNotification(){
         String NOTIFICATION_CHANNEL_ID = "example.permanence";
 
         String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
         String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
 
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID);
-        Notification notification = notificationBuilder
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.app_logo)
                 .setOngoing(true)
                 .setContentTitle("Alarm is running")
                 .setContentText("Time : "+String.format("%s:%s", formattedHour, formattedMinute))
                 .setPriority(NotificationManager.IMPORTANCE_HIGH)
-                .setCategory(Notification.CATEGORY_ALARM)
-                .build();
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setCategory(Notification.CATEGORY_ALARM);
 
-        startForeground(42, notification);
+        return notificationBuilder.build();
     }
 
     private void cancelNotification(){

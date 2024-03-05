@@ -31,15 +31,17 @@
             android:name=".AlarmManagerService"
             android:enabled="true"
             android:exported="false"
-            android:permission="android:permission:FOREGROUND_SERVICE"/>
+            android:permission="android:permission:FOREGROUND_SERVICE" />
         <service
             android:name=".MusicService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:permission="android:permission:FOREGROUND_SERVICE" />
         <service
             android:name=".AlarmNotificationService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:permission="android:permission:FOREGROUND_SERVICE" />
 
         <activity
             android:name=".MainActivity"
@@ -53,6 +55,10 @@
 
         <receiver
             android:name=".AlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+        <receiver
+            android:name=".NotificationShutAlarmOffReceiver"
             android:enabled="true"
             android:exported="false" />
     </application>
