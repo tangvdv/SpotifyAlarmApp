@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import android.content.Context;
 import android.media.AudioManager;
@@ -9,9 +9,9 @@ import android.widget.SeekBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.spotifyalarm.databinding.SettingsActivityBinding;
-import com.example.spotifyalarm.model.AlarmModel;
-import com.example.spotifyalarm.model.SettingsModel;
+import dev.tangvdv.spotifyalarm.databinding.SettingsActivityBinding;
+import dev.tangvdv.spotifyalarm.model.AlarmModel;
+import dev.tangvdv.spotifyalarm.model.SettingsModel;
 
 public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "SettingsActivity";

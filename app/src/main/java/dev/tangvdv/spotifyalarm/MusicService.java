@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import static java.lang.Thread.sleep;
 
@@ -20,8 +20,8 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.spotifyalarm.model.AlarmModel;
-import com.example.spotifyalarm.model.SettingsModel;
+import dev.tangvdv.spotifyalarm.model.AlarmModel;
+import dev.tangvdv.spotifyalarm.model.SettingsModel;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;

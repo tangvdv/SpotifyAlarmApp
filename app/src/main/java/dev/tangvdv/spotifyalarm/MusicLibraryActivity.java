@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,16 +22,11 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.spotifyalarm.databinding.ActivityLibraryBinding;
-import com.example.spotifyalarm.model.AlarmModel;
-import com.example.spotifyalarm.model.MusicModel;
-
-import org.json.JSONObject;
+import dev.tangvdv.spotifyalarm.databinding.ActivityLibraryBinding;
+import dev.tangvdv.spotifyalarm.model.MusicModel;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class MusicLibraryActivity extends AppCompatActivity {

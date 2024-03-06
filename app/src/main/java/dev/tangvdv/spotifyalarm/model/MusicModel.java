@@ -1,4 +1,4 @@
-package com.example.spotifyalarm.model;
+package dev.tangvdv.spotifyalarm.model;
 
 import java.util.HashMap;
 import java.util.Objects;

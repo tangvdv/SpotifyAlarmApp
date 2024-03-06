@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -7,14 +7,15 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.spotifyalarm.model.AlarmModel;
+import dev.tangvdv.spotifyalarm.model.AlarmModel;
+
+import dev.tangvdv.spotifyalarm.R;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";

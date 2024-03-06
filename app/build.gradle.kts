@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.spotifyalarm"
+    namespace = "dev.tangvdv.spotifyalarm"
     compileSdk = 33
 
     defaultConfig {
-        applicationId = "com.example.spotifyalarm"
+        applicationId = "dev.tangvdv.spotifyalarm"
         minSdk = 26
         targetSdk = 33
         versionCode = 1

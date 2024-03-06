@@ -1,4 +1,4 @@
-package com.example.spotifyalarm.model;
+package dev.tangvdv.spotifyalarm.model;
 
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 

@@ -1,9 +1,8 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 public class NotificationShutAlarmOffReceiver extends BroadcastReceiver {
 

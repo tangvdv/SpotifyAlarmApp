@@ -37,11 +37,6 @@
             android:enabled="true"
             android:exported="false"
             android:permission="android:permission:FOREGROUND_SERVICE" />
-        <service
-            android:name=".AlarmNotificationService"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android:permission:FOREGROUND_SERVICE" />
 
         <activity
             android:name=".MainActivity"

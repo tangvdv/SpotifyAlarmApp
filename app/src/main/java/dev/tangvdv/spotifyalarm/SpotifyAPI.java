@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import android.content.Context;
 import android.util.Log;
@@ -10,7 +10,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.spotifyalarm.model.MusicModel;
+import dev.tangvdv.spotifyalarm.model.MusicModel;
 
 import org.json.JSONArray;
 import org.json.JSONException;

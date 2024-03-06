@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

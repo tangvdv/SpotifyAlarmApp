@@ -1,4 +1,4 @@
-package com.example.spotifyalarm;
+package dev.tangvdv.spotifyalarm;
 
 import static java.lang.Thread.sleep;
 
@@ -30,9 +30,9 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.spotifyalarm.databinding.ActivityMainBinding;
-import com.example.spotifyalarm.databinding.UserProfileDialogBinding;
-import com.example.spotifyalarm.model.AlarmModel;
+import dev.tangvdv.spotifyalarm.databinding.ActivityMainBinding;
+import dev.tangvdv.spotifyalarm.databinding.UserProfileDialogBinding;
+import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
