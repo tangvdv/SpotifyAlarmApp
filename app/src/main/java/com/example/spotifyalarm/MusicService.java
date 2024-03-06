@@ -90,7 +90,6 @@ public class MusicService extends Service {
                 new ConnectionParams.Builder(this.getString(R.string.client_id))
                         .setRedirectUri(this.getString(R.string.redirect_uri))
                         .build();
-        logFile.writeToFile(TAG, "SetSpotifyAppRemote");
         SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
             @Override
             public void onConnected(SpotifyAppRemote spotifyAppRemote) {
@@ -157,6 +156,7 @@ public class MusicService extends Service {
     private void applySettings(){
         settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
         Log.v(TAG, String.valueOf(settingsModel.getSettingsModelContent()));
+        logFile.writeToFile(TAG, String.valueOf(settingsModel.getSettingsModelContent()));
 
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
@@ -200,7 +200,6 @@ public class MusicService extends Service {
 
     private void spotifyRemoteCheckThread(){
         remoteCheckSecondsLeft = 60;
-        logFile.writeToFile(TAG, "StartRemoteCheckThread");
         Thread spotifyRemoteCheck = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -208,7 +207,6 @@ public class MusicService extends Service {
                     try {
                         sleep(1000);
                         remoteCheckSecondsLeft -= 1;
-                        logFile.writeToFile(TAG, remoteCheckSecondsLeft + "seconds left until alarm backup plays");
                         Log.v(TAG, remoteCheckSecondsLeft + "seconds left until alarm backup plays");
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);

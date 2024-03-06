@@ -47,5 +47,7 @@ public class AlarmManagerService extends Service {
         AlarmModel.getInstance().setAlarmOn();
 
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
+        LogFile logFile = new LogFile(this);
+        logFile.writeToFile(TAG, AlarmModel.getInstance().getAlarmModelContent().toString());
     }
 }
