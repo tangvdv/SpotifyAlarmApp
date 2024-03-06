@@ -126,7 +126,6 @@ public class MusicService extends Service {
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
             Log.v(TAG, "SpotifyAlarmPlay");
             logFile.writeToFile(TAG, "SpotifyAlarmPlay");
-            AlarmModel.getInstance().setAlarmRing();
             isPaused = false;
 
             /*

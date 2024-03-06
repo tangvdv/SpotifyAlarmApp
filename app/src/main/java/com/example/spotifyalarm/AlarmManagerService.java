@@ -23,7 +23,7 @@ public class AlarmManagerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF || AlarmModel.getInstance().getCurrentState() == AlarmModel.State.RINGING){
+        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
             Notification notification = createNotification();
             startForeground(42, notification);
             setAlarm();

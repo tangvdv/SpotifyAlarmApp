@@ -13,8 +13,7 @@ public class AlarmModel {
     private String playlist_uri;
     public enum State {
         OFF,
-        ON,
-        RINGING
+        ON
     }
 
     private State currentState;
@@ -86,10 +85,6 @@ public class AlarmModel {
 
     public void setAlarmOn() {
         currentState = State.ON;
-    }
-
-    public void setAlarmRing() {
-        currentState = State.RINGING;
     }
 
     public HashMap<String, Object> getAlarmModelContent(){
