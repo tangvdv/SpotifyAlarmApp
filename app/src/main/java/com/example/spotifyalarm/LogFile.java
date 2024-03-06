@@ -1,6 +1,7 @@
 package com.example.spotifyalarm;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
@@ -30,8 +31,29 @@ public class LogFile extends AppCompatActivity {
                 if (!fileCreated) {
                     Log.e(TAG, "Unable to create file at specified path. It already exists");
                 }
+                else{
+                    writeStartContentLogFile();
+                }
             }
             Log.i(TAG, writer.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeStartContentLogFile(){
+        String separator = "--------------------------------------------------";
+        String os_version = "OS Version : " + System.getProperty("os.version");
+        String sdk_version = "SDK Version : " + Build.VERSION.SDK_INT;
+        String device = "Device : " + Build.DEVICE;
+        String model = "Model : " + Build.MODEL;
+        String product = "Product : " + Build.PRODUCT;
+
+        String content = String.format("%s\n%s\n%s\n%s\n%s\n%s\n%s\n", separator, os_version, sdk_version, device, model, product, separator);
+        try {
+            writer = new FileOutputStream(file, true); // Append mode
+            writer.write(content.getBytes());
+            writer.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
