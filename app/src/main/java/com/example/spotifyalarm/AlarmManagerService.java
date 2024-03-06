@@ -1,6 +1,8 @@
 package com.example.spotifyalarm;
 
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -9,6 +11,8 @@ import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
 
 import com.example.spotifyalarm.model.AlarmModel;
 
@@ -20,10 +24,30 @@ public class AlarmManagerService extends Service {
         super.onStartCommand(intent, flags, startId);
 
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF || AlarmModel.getInstance().getCurrentState() == AlarmModel.State.RINGING){
+            Notification notification = createNotification();
+            startForeground(42, notification);
             setAlarm();
         }
 
         return START_STICKY;
+    }
+
+    private Notification createNotification(){
+        String NOTIFICATION_CHANNEL_ID = "example.permanence";
+
+        String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
+        String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
+
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.mipmap.app_logo)
+                .setOngoing(true)
+                .setContentTitle("Alarm is running")
+                .setContentText("Time : "+String.format("%s:%s", formattedHour, formattedMinute))
+                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setCategory(Notification.CATEGORY_ALARM);
+
+        return notificationBuilder.build();
     }
 
     @Override
@@ -42,12 +66,16 @@ public class AlarmManagerService extends Service {
 
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, AlarmModel.getInstance().getCalendar().getTimeInMillis(), pendingIntent);
 
-        startService(new Intent(this, AlarmNotificationService.class));
-
         AlarmModel.getInstance().setAlarmOn();
 
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
         LogFile logFile = new LogFile(this);
         logFile.writeToFile(TAG, AlarmModel.getInstance().getAlarmModelContent().toString());
+    }
+
+    @Override
+    public void onDestroy() {
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        super.onDestroy();
     }
 }

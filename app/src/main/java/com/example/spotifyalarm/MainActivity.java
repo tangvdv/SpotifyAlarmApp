@@ -168,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
                     if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                         AlarmModel.getInstance().setAlarmOff();
                         stopService(alarmServiceIntent);
-                        stopService(new Intent(context, AlarmNotificationService.class));
                     }
                 }
 

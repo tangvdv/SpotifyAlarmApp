@@ -53,7 +53,6 @@ public class MusicService extends Service {
         isBackupAlarmPlayed = false;
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
-            stopService(new Intent(this, AlarmNotificationService.class));
             startForeground(1, createNotification());
             if(isNetworkConnected()){
                 setSpotifyAppRemote();
@@ -261,7 +260,7 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         AlarmWakeLock.releaseAlarmWakeLock();
-        defaultRingtone.stop();
+        if(defaultRingtone != null) defaultRingtone.stop();
         super.onDestroy();
     }
 }
