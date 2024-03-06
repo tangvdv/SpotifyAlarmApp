@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -51,8 +52,13 @@ public class MusicService extends Service {
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
             stopService(new Intent(this, AlarmNotificationService.class));
             startForeground(1, createNotification());
-            setSpotifyAppRemote();
-            spotifyRemoteCheckThread();
+            if(isNetworkConnected()){
+                setSpotifyAppRemote();
+                spotifyRemoteCheckThread();
+            }
+            else{
+                playBackupAlarm();
+            }
         }
 
         return START_STICKY;
@@ -85,7 +91,7 @@ public class MusicService extends Service {
         SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
             @Override
             public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                if(!isBackupAlarmPlayed){
+                if(!isBackupAlarmPlayed && !hasSpotifyRemoteResponded){
                     logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
                     mySpotifyAppRemote = spotifyAppRemote;
                     playSpotifyAlarm();
@@ -96,7 +102,7 @@ public class MusicService extends Service {
             public void onFailure(Throwable throwable) {
                 logFile.writeToFile(TAG, throwable.getMessage());
                 Log.e(TAG, throwable.getMessage(), throwable);
-                if(!isBackupAlarmPlayed){
+                if(!isBackupAlarmPlayed && !hasSpotifyRemoteResponded){
                     hasSpotifyRemoteResponded = true;
                     playBackupAlarm();
                 }
@@ -245,6 +251,12 @@ public class MusicService extends Service {
         else AlarmModel.getInstance().setAlarmOff();
 
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     @Override
