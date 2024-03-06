@@ -232,6 +232,7 @@ public class MusicService extends Service {
 
         Log.v(TAG, mediaPlayer.toString());
         mediaPlayer.setAudioAttributes(audioAttributes);
+        mediaPlayer.setLooping(settingsModel.getLoopMusic());
         mediaPlayer.start();
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override

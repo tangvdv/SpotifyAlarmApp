@@ -24,7 +24,9 @@
     <string name="alarm_on">On</string>
     <string name="alarm_off">Off</string>
     <string name="settings_title">Settings</string>
-    <string name="alarm_title">Alarm</string>
+    <string name="spotify_alarm_title">Spotify Alarm</string>
+    <string name="backup_alarm_title">Backup Alarm</string>
+    <string name="loop_setting_title">Loop music</string>
     <string name="repeat_setting_title">Repeat</string>
     <string name="stop_alarm_setting_title">Stop alarm : </string>
     <string name="music_title">Music</string>

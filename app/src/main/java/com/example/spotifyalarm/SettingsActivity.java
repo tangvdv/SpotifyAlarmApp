@@ -109,6 +109,13 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
+        binding.switchLoopSettings.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                settingsModel.setLoopMusic(b);
+            }
+        });
+
         /*
 
         binding.spinnerStopAlarmSettings.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
