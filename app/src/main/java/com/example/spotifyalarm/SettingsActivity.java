@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 
@@ -41,6 +40,7 @@ public class SettingsActivity extends AppCompatActivity {
         binding.switchRepeatSettings.setChecked(settingsModel.isRepeat());
         binding.switchShuffleSettings.setChecked(settingsModel.isShuffle());
         binding.seekBarSoundVolume.setProgress(settingsModel.getVolume());
+        binding.switchLoopSettings.setChecked(settingsModel.getLoopMusic());
         //binding.spinnerStopAlarmSettings.setSelection(settingsModel.getStopAlarm());
     }
 

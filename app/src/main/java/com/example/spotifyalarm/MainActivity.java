@@ -146,13 +146,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startAlarmService(){
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
-            if(isSpotifyActivityConnected == 1){
-                startService(alarmServiceIntent);
-            }
-            else{
-                errorUserToast(context.getString(R.string.alarm_spotify_connection_error));
-                binding.setAlarmSwitch.setChecked(false);
-            }
+            startService(alarmServiceIntent);
         }
     }
 

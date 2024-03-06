@@ -10,8 +10,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -36,7 +39,7 @@ public class MusicService extends Service {
     private boolean isBackupAlarmPlayed;
     private int remoteCheckSecondsLeft;
 
-    private MediaPlayer mediaPlayer;
+    private Ringtone defaultRingtone;
 
     private SettingsModel settingsModel;
     //private int stopAlarm;
@@ -224,23 +227,20 @@ public class MusicService extends Service {
     private void playBackupAlarm(){
         applySettings();
 
-        mediaPlayer = MediaPlayer.create(this, R.raw.flowers_to_the_moon);
+        Uri defaultRingtoneUri = RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(), RingtoneManager.TYPE_ALARM);
+        defaultRingtone = RingtoneManager.getRingtone(this, defaultRingtoneUri);
+
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build();
 
-        Log.v(TAG, mediaPlayer.toString());
-        mediaPlayer.setAudioAttributes(audioAttributes);
-        mediaPlayer.setLooping(settingsModel.getLoopMusic());
-        mediaPlayer.start();
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-            }
-        });
+        defaultRingtone.setAudioAttributes(audioAttributes);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            defaultRingtone.setLooping(settingsModel.getLoopMusic());
+            defaultRingtone.setVolume(settingsModel.getVolume());
+        }
+        defaultRingtone.play();
 
         Log.v(TAG, "BackupAlarmPlay");
         logFile.writeToFile(TAG, "BackupAlarmPlay");
@@ -263,8 +263,7 @@ public class MusicService extends Service {
     @Override
     public void onDestroy() {
         AlarmWakeLock.releaseAlarmWakeLock();
-        mediaPlayer.stop();
-        mediaPlayer.release();
+        defaultRingtone.stop();
         super.onDestroy();
     }
 }
