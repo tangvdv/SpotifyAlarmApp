@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startAlarmService(){
-        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
+        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF || AlarmModel.getInstance().getCurrentState() == AlarmModel.State.RINGING){
             startService(alarmServiceIntent);
         }
     }
