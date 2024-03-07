@@ -16,3 +16,5 @@ local.properties
 spotify_connect.xml
 
 app/src/main/res/raw/
+
+app/debug/

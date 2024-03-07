@@ -1,7 +1,10 @@
 package dev.tangvdv.spotifyalarm;
 
+import static java.lang.Thread.sleep;
+
 import android.app.AlarmManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -34,7 +37,11 @@ public class AlarmManagerService extends Service {
     }
 
     private Notification createNotification(){
-        String NOTIFICATION_CHANNEL_ID = "example.permanence";
+        String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
+
+        NotificationChannel serviceChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "Notification SpotifyAlarm",NotificationManager.IMPORTANCE_HIGH);
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(serviceChannel);
 
         String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
         String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());

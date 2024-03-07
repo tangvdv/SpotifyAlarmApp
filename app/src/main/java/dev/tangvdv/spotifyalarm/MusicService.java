@@ -3,6 +3,7 @@ package dev.tangvdv.spotifyalarm;
 import static java.lang.Thread.sleep;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -70,7 +71,11 @@ public class MusicService extends Service {
         Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        String NOTIFICATION_CHANNEL_ID = "example.permanence";
+        String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
+
+        NotificationChannel serviceChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "Notification SpotifyAlarm",NotificationManager.IMPORTANCE_HIGH);
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(serviceChannel);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.app_logo)
@@ -139,6 +144,7 @@ public class MusicService extends Service {
             playBackupAlarm();
         }
 
+        stopForeground(STOP_FOREGROUND_REMOVE);
         alarmEnding();
     }
 
