@@ -28,7 +28,10 @@ public class AlarmSharedPreferences {
     public static void clearSharedPreferences(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.clear();
+        editor.remove("TOKEN");
+        editor.remove("alarm");
+        editor.remove("music");
+        editor.remove("user");
         editor.apply();
     }
 

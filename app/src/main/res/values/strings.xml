@@ -39,8 +39,6 @@
 
     // Errors
     <string name="network_error">Network connection error</string>
-    <string name="alarm_spotify_connection_error">You need to be connected to Spotify to set an alarm</string>
-    <string name="alarm_network_connection_error">You need to be connected to internet to set an alarm</string>
     <string name="spotify_activity_error">Failed to open spotify activity</string>
     <string name="spotify_app_missing_error">Couldn\'t find Spotify application</string>
     <string name="token_null">TOKEN is null</string>
