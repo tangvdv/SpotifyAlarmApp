@@ -22,6 +22,8 @@ import dev.tangvdv.spotifyalarm.R;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
+    private AlarmManager alarmManager;
+    private PendingIntent pendingIntent;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -64,9 +66,9 @@ public class AlarmManagerService extends Service {
     }
 
     public void setAlarm(){
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             alarmManager.canScheduleExactAlarms();
@@ -84,6 +86,7 @@ public class AlarmManagerService extends Service {
     @Override
     public void onDestroy() {
         stopForeground(STOP_FOREGROUND_REMOVE);
+        if(alarmManager != null && pendingIntent != null) alarmManager.cancel(pendingIntent);
         super.onDestroy();
     }
 }

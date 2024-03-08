@@ -143,8 +143,6 @@ public class MusicService extends Service {
             Log.e(TAG, "SpotifyPlayerApi object null");
             playBackupAlarm();
         }
-
-        stopForeground(STOP_FOREGROUND_REMOVE);
         alarmEnding();
     }
 
@@ -250,8 +248,8 @@ public class MusicService extends Service {
     }
 
     private void alarmEnding(){
+        AlarmModel.getInstance().setAlarmOff();
         if(settingsModel.isRepeat()) setNextAlarm();
-        else AlarmModel.getInstance().setAlarmOff();
 
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
     }
@@ -266,6 +264,7 @@ public class MusicService extends Service {
     public void onDestroy() {
         AlarmWakeLock.releaseAlarmWakeLock();
         if(defaultRingtone != null) defaultRingtone.stop();
+        if(mySpotifyAppRemote != null) mySpotifyAppRemote.getPlayerApi().pause();
         super.onDestroy();
     }
 }
