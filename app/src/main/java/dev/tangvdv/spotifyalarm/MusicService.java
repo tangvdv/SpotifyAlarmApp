@@ -28,10 +28,13 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
+import java.text.DateFormat;
 import java.util.Calendar;
 
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
+    private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
+    private static final int NOTIFY_ID = 51;
     private SpotifyAppRemote mySpotifyAppRemote;
 
     private LogFile logFile;
@@ -49,12 +52,18 @@ public class MusicService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         onTaskRemoved(intent);
+
+        NotificationChannel serviceChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "Notification SpotifyAlarm",NotificationManager.IMPORTANCE_HIGH);
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(serviceChannel);
+
+        startForeground(NOTIFY_ID, buildForegroundNotification());
+
         logFile = new LogFile(this);
         hasSpotifyRemoteResponded = false;
         isBackupAlarmPlayed = false;
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
-            startForeground(1, createNotification());
             if(isNetworkConnected()){
                 setSpotifyAppRemote();
                 spotifyRemoteCheckThread();
@@ -67,15 +76,9 @@ public class MusicService extends Service {
         return START_STICKY;
     }
 
-    private Notification createNotification(){
+    private void createMusicNotification(){
         Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
-
-        NotificationChannel serviceChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "Notification SpotifyAlarm",NotificationManager.IMPORTANCE_HIGH);
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(serviceChannel);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.app_logo)
@@ -85,6 +88,17 @@ public class MusicService extends Service {
                 .setContentIntent(pendingIntent)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(R.mipmap.app_logo, "Stop", pendingIntent);
+
+        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+
+        notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
+    }
+
+    private Notification buildForegroundNotification(){
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.mipmap.app_logo)
+                .setOngoing(true)
+                .setContentTitle("Music is setting up");
 
         return notificationBuilder.build();
     }
@@ -132,6 +146,7 @@ public class MusicService extends Service {
             Log.v(TAG, "SpotifyAlarmPlay");
             logFile.writeToFile(TAG, "SpotifyAlarmPlay");
             isPaused = false;
+            createMusicNotification();
 
             /*
             if(stopAlarm != 0){
@@ -241,6 +256,7 @@ public class MusicService extends Service {
             defaultRingtone.setVolume(settingsModel.getVolume());
         }
         defaultRingtone.play();
+        createMusicNotification();
 
         Log.v(TAG, "BackupAlarmPlay");
         logFile.writeToFile(TAG, "BackupAlarmPlay");
