@@ -77,6 +77,7 @@ public class AlarmManagerService extends Service {
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, AlarmModel.getInstance().getCalendar().getTimeInMillis(), pendingIntent);
 
         AlarmModel.getInstance().setAlarmOn();
+        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
 
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
         LogFile logFile = new LogFile(this);
