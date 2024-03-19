@@ -27,6 +27,8 @@ import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.spotify.protocol.client.CallResult;
+import com.spotify.protocol.types.PlayerState;
 
 import java.text.DateFormat;
 import java.util.Calendar;
@@ -136,11 +138,10 @@ public class MusicService extends Service {
     }
 
     private void playSpotifyAlarm(){
+        applySettings();
         String uri = AlarmModel.getInstance().getPlaylist_uri();
         if(!uri.equals("")){
-            applySettings();
             mySpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
-
             mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
             Log.v(TAG, "SpotifyAlarmPlay");
@@ -152,13 +153,13 @@ public class MusicService extends Service {
             if(stopAlarm != 0){
                 stopAlarmTimeLeftThread();
             }
-             */
+            */
+            alarmEnding();
         }
-        else{
+        else {
             Log.e(TAG, "SpotifyPlayerApi object null");
             playBackupAlarm();
         }
-        alarmEnding();
     }
 
     private void setNextAlarm(){
@@ -256,6 +257,7 @@ public class MusicService extends Service {
             defaultRingtone.setVolume(settingsModel.getVolume());
         }
         defaultRingtone.play();
+        isPaused = false;
         createMusicNotification();
 
         Log.v(TAG, "BackupAlarmPlay");
@@ -265,9 +267,9 @@ public class MusicService extends Service {
 
     private void alarmEnding(){
         AlarmModel.getInstance().setAlarmOff();
-        if(settingsModel.isRepeat()) setNextAlarm();
-
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
+        if(settingsModel.isRepeat()) setNextAlarm();
+        checkMusicState();
     }
 
     private boolean isNetworkConnected() {
@@ -276,11 +278,41 @@ public class MusicService extends Service {
         return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
+    private void checkMusicState(){
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!isPaused){
+                    try {
+                        sleep(1000);
+                        if(isBackupAlarmPlayed){
+                            Log.i(TAG, "Checking ringtone state");
+                            if(!defaultRingtone.isPlaying()) isPaused = true;
+                        }else{
+                            mySpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+                                @Override
+                                public void onResult(PlayerState playerState) {
+                                    Log.i(TAG, "Checking spotify remote state");
+                                    if(playerState.isPaused) isPaused = true;
+                                }
+                            });
+                        }
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                stopSelf();
+            }
+        });
+        thread.start();
+    }
+
     @Override
     public void onDestroy() {
-        AlarmWakeLock.releaseAlarmWakeLock();
         if(defaultRingtone != null) defaultRingtone.stop();
         if(mySpotifyAppRemote != null) mySpotifyAppRemote.getPlayerApi().pause();
+        AlarmWakeLock.releaseAlarmWakeLock(this);
         super.onDestroy();
     }
 }
