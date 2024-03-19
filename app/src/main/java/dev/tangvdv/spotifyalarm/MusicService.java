@@ -48,7 +48,6 @@ public class MusicService extends Service {
     private Ringtone defaultRingtone;
 
     private SettingsModel settingsModel;
-    //private int stopAlarm;
     private boolean isPaused = true;
 
     @Override
@@ -149,11 +148,6 @@ public class MusicService extends Service {
             isPaused = false;
             createMusicNotification();
 
-            /*
-            if(stopAlarm != 0){
-                stopAlarmTimeLeftThread();
-            }
-            */
             alarmEnding();
         }
         else {
@@ -178,43 +172,7 @@ public class MusicService extends Service {
 
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
-
-        /*
-        int[] stopAlarmValues = getResources().getIntArray(R.array.stop_alarm_values);
-        stopAlarm = stopAlarmValues[settingsModel.getStopAlarm()];
-         */
     }
-
-    /*
-    private void stopAlarmTimeLeftThread(){
-        Thread stopAlarmThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (stopAlarm > 0 && !isPaused){
-                    try {
-                        Log.i(TAG, "Alarm stop in : "+stopAlarm+" minute(s)");
-                        sleep(60000);
-                        stopAlarm -= 1;
-                        mySpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
-                            @Override
-                            public void onResult(PlayerState playerState) {
-                                isPaused = playerState.isPaused;
-                            }
-                        });
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-                if(!isPaused){
-                    mySpotifyAppRemote.getPlayerApi().pause();
-                }
-            }
-        });
-
-        stopAlarmThread.start();
-    }
-     */
 
     private void spotifyRemoteCheckThread(){
         remoteCheckSecondsLeft = 60;

@@ -41,7 +41,6 @@ public class SettingsActivity extends AppCompatActivity {
         binding.switchShuffleSettings.setChecked(settingsModel.isShuffle());
         binding.seekBarSoundVolume.setProgress(settingsModel.getVolume());
         binding.switchLoopSettings.setChecked(settingsModel.getLoopMusic());
-        //binding.spinnerStopAlarmSettings.setSelection(settingsModel.getStopAlarm());
     }
 
     private void bindingManager(){
@@ -116,20 +115,6 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
-        /*
-
-        binding.spinnerStopAlarmSettings.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int pos, long l) {
-                settingsModel.setStopAlarm(pos);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-         */
     }
 
     private void applySettings(){

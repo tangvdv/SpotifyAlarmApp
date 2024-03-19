@@ -6,14 +6,12 @@ public class SettingsModel {
     private boolean repeat;
     private boolean shuffle;
     private int volume;
-    private int stopAlarm;
     private boolean loopMusic;
 
     public SettingsModel(HashMap<String, Object> settings){
         repeat = settings.containsKey("repeat") && (Boolean) settings.get("repeat");
         shuffle = settings.containsKey("shuffle") && (Boolean) settings.get("shuffle");
         volume = settings.containsKey("volume") ? (Integer) settings.get("volume") : 7;
-        stopAlarm = settings.containsKey("stopAlarm") ? (Integer) settings.get("stopAlarm") : 0;
         loopMusic = settings.containsKey("loopMusic") && (Boolean) settings.get("loopMusic");
     }
 
@@ -41,14 +39,6 @@ public class SettingsModel {
         this.volume = volume;
     }
 
-    public int getStopAlarm() {
-        return stopAlarm;
-    }
-
-    public void setStopAlarm(int stopAlarm) {
-        this.stopAlarm = stopAlarm;
-    }
-
     public boolean getLoopMusic() { return loopMusic; }
 
     public void setLoopMusic(boolean loopMusic) { this.loopMusic = loopMusic; }
@@ -58,7 +48,6 @@ public class SettingsModel {
         map.put("repeat", this.repeat);
         map.put("shuffle", this.shuffle);
         map.put("volume", this.volume);
-        map.put("stopAlarm", this.stopAlarm);
         map.put("loopMusic", this.loopMusic);
 
         return map;
