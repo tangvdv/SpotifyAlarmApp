@@ -8,12 +8,7 @@ public class AlarmWakeLock {
     private static final String TAG = "AlarmWakeLock";
     private static PowerManager.WakeLock wakeLock;
 
-    private static LogFile logFile;
-
     static void acquireAlarmWakeLock(Context context) {
-        Log.v(TAG, "Acquiring cpu wake lock");
-        LogFile logFile = new LogFile(context);
-        logFile.writeToFile(TAG, "Acquiring cpu wake lock");
         if (wakeLock != null) {
             return;
         }
@@ -25,11 +20,14 @@ public class AlarmWakeLock {
                         PowerManager.ACQUIRE_CAUSES_WAKEUP |
                         PowerManager.ON_AFTER_RELEASE, "SpotifyAlarm::AlarmWakeLock");
         wakeLock.acquire();
+        Log.v(TAG, "Acquiring cpu wake lock");
     }
 
-    static void releaseAlarmWakeLock() {
+    static void releaseAlarmWakeLock(Context context) {
         Log.v(TAG, "Releasing cpu wake lock");
-        if(logFile != null) logFile.writeToFile(TAG, "Releasing cpu wake lock");
+        LogFile logFile = new LogFile(context);
+        logFile.writeToFile(TAG, "Releasing cpu wake lock");
+        logFile.separator();
         if (wakeLock != null) {
             wakeLock.release();
             wakeLock = null;
