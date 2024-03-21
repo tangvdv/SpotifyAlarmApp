@@ -28,6 +28,7 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.CallResult;
+import com.spotify.protocol.types.Empty;
 import com.spotify.protocol.types.PlayerState;
 
 import java.text.DateFormat;
@@ -142,13 +143,17 @@ public class MusicService extends Service {
         if(!uri.equals("")){
             mySpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
             mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
-            mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
-            Log.v(TAG, "SpotifyAlarmPlay");
-            logFile.writeToFile(TAG, "SpotifyAlarmPlay");
-            isPaused = false;
-            createMusicNotification();
+            mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM).setResultCallback(new CallResult.ResultCallback<Empty>() {
+                @Override
+                public void onResult(Empty empty) {
+                    isPaused = false;
+                    Log.v(TAG, "SpotifyAlarmPlay");
+                    logFile.writeToFile(TAG, "SpotifyAlarmPlay");
+                    createMusicNotification();
 
-            alarmEnding();
+                    alarmEnding();
+                }
+            });
         }
         else {
             Log.e(TAG, "SpotifyPlayerApi object null");
@@ -244,13 +249,11 @@ public class MusicService extends Service {
                     try {
                         sleep(1000);
                         if(isBackupAlarmPlayed){
-                            Log.i(TAG, "Checking ringtone state");
                             if(!defaultRingtone.isPlaying()) isPaused = true;
                         }else{
                             mySpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
                                 @Override
                                 public void onResult(PlayerState playerState) {
-                                    Log.i(TAG, "Checking spotify remote state");
                                     if(playerState.isPaused) isPaused = true;
                                 }
                             });
