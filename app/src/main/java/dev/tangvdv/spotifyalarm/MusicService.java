@@ -195,7 +195,6 @@ public class MusicService extends Service {
                 }
 
                 if(!hasSpotifyRemoteResponded && remoteCheckSecondsLeft <= 0){
-                    isBackupAlarmPlayed = true;
                     playBackupAlarm();
                 }
             }
@@ -221,6 +220,7 @@ public class MusicService extends Service {
         }
         defaultRingtone.play();
         isPaused = false;
+        isBackupAlarmPlayed = true;
         createMusicNotification();
 
         Log.v(TAG, "BackupAlarmPlay");
