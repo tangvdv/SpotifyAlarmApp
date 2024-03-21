@@ -88,7 +88,7 @@ public class AlarmManagerService extends Service {
             alarmManager.canScheduleExactAlarms();
         }
 
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, AlarmModel.getInstance().getCalendar().getTimeInMillis(), pendingIntent);
+        alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(AlarmModel.getInstance().getCalendar().getTimeInMillis(), pendingIntent), pendingIntent);
 
         AlarmModel.getInstance().setAlarmOn();
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
