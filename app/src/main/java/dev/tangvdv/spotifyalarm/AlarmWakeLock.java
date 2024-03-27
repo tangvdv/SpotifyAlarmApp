@@ -8,7 +8,7 @@ public class AlarmWakeLock {
     private static final String TAG = "AlarmWakeLock";
     private static PowerManager.WakeLock wakeLock;
 
-    static void acquireAlarmWakeLock(Context context) {
+    public static void acquireAlarmWakeLock(Context context) {
         if (wakeLock != null) {
             return;
         }
@@ -21,9 +21,12 @@ public class AlarmWakeLock {
                         PowerManager.ON_AFTER_RELEASE, "SpotifyAlarm::AlarmWakeLock");
         wakeLock.acquire();
         Log.v(TAG, "Acquiring cpu wake lock");
+        LogFile logFile = new LogFile(context);
+        logFile.writeToFile(TAG, "Acquiring cpu wake lock");
+        logFile.separator();
     }
 
-    static void releaseAlarmWakeLock(Context context) {
+    public static void releaseAlarmWakeLock(Context context) {
         Log.v(TAG, "Releasing cpu wake lock");
         LogFile logFile = new LogFile(context);
         logFile.writeToFile(TAG, "Releasing cpu wake lock");

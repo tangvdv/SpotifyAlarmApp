@@ -78,24 +78,6 @@ public class MusicService extends Service {
         return START_STICKY;
     }
 
-    private void createMusicNotification(){
-        Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.mipmap.app_logo)
-                .setOngoing(true)
-                .setContentTitle("Alarm is ringing ! Click to shut alarm off")
-                .setPriority(NotificationManager.IMPORTANCE_HIGH)
-                .setContentIntent(pendingIntent)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .addAction(R.mipmap.app_logo, "Stop", pendingIntent);
-
-        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-
-        notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
-    }
-
     private Notification buildForegroundNotification(){
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.app_logo)
@@ -149,7 +131,6 @@ public class MusicService extends Service {
                     isPaused = false;
                     Log.v(TAG, "SpotifyAlarmPlay");
                     logFile.writeToFile(TAG, "SpotifyAlarmPlay");
-                    createMusicNotification();
 
                     alarmEnding();
                 }
@@ -221,7 +202,6 @@ public class MusicService extends Service {
         defaultRingtone.play();
         isPaused = false;
         isBackupAlarmPlayed = true;
-        createMusicNotification();
 
         Log.v(TAG, "BackupAlarmPlay");
         logFile.writeToFile(TAG, "BackupAlarmPlay");
@@ -229,6 +209,7 @@ public class MusicService extends Service {
     }
 
     private void alarmEnding(){
+        stopForeground(STOP_FOREGROUND_REMOVE);
         AlarmModel.getInstance().setAlarmOff();
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
         if(settingsModel.isRepeat()) setNextAlarm();
