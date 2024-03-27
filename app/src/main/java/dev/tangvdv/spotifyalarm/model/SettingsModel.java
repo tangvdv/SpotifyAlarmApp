@@ -39,7 +39,7 @@ public class SettingsModel {
         this.volume = volume;
     }
 
-    public boolean getLoopMusic() { return loopMusic; }
+    public boolean isLooping() { return loopMusic; }
 
     public void setLoopMusic(boolean loopMusic) { this.loopMusic = loopMusic; }
 

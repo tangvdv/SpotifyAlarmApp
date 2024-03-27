@@ -40,7 +40,7 @@ public class SettingsActivity extends AppCompatActivity {
         binding.switchRepeatSettings.setChecked(settingsModel.isRepeat());
         binding.switchShuffleSettings.setChecked(settingsModel.isShuffle());
         binding.seekBarSoundVolume.setProgress(settingsModel.getVolume());
-        binding.switchLoopSettings.setChecked(settingsModel.getLoopMusic());
+        binding.switchLoopSettings.setChecked(settingsModel.isLooping());
     }
 
     private void bindingManager(){
@@ -79,6 +79,14 @@ public class SettingsActivity extends AppCompatActivity {
             public void onClick(View view) {
                 settingsModel.setShuffle(!settingsModel.isShuffle());
                 binding.switchShuffleSettings.setChecked(settingsModel.isShuffle());
+            }
+        });
+
+        binding.btnLoopSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                settingsModel.setLoopMusic(!settingsModel.isLooping());
+                binding.switchLoopSettings.setChecked(settingsModel.isLooping());
             }
         });
 

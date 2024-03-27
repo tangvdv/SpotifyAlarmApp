@@ -5,7 +5,6 @@ import static java.lang.Thread.sleep;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -31,7 +30,6 @@ import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.types.Empty;
 import com.spotify.protocol.types.PlayerState;
 
-import java.text.DateFormat;
 import java.util.Calendar;
 
 public class MusicService extends Service {
@@ -196,7 +194,7 @@ public class MusicService extends Service {
 
         defaultRingtone.setAudioAttributes(audioAttributes);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            defaultRingtone.setLooping(settingsModel.getLoopMusic());
+            defaultRingtone.setLooping(settingsModel.isLooping());
             defaultRingtone.setVolume(settingsModel.getVolume());
         }
         defaultRingtone.play();
