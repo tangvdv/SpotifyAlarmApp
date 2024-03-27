@@ -7,15 +7,19 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -88,6 +92,8 @@ public class MainActivity extends AppCompatActivity {
         context = this;
 
         isSpotifyActivityConnected = -1;
+
+        askNotificationPermission();
 
         sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
 
@@ -513,4 +519,16 @@ public class MainActivity extends AppCompatActivity {
     private void saveAlarm(){
         AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
     }
+
+    private void askNotificationPermission(){
+        if(ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED){
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+    }
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(), isGranted -> {}
+    );
 }
