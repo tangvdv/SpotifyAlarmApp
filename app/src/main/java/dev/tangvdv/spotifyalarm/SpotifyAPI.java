@@ -210,8 +210,13 @@ public class SpotifyAPI {
                 try{
                     JSONObject obj = new JSONObject(response);
                     String name = obj.getString("display_name");
-                    JSONObject images = new JSONArray(obj.getString("images")).getJSONObject(0);
-                    callback.onSuccess(name, images.getString("url"));
+                    JSONArray imagesArray = new JSONArray(obj.optString("images"));
+                    String image_url = null;
+                    if(imagesArray.length() > 0) {
+                        JSONObject images = new JSONArray(obj.getString("images")).getJSONObject(0);
+                        image_url = images.getString("url");
+                    }
+                    callback.onSuccess(name, image_url);
                 } catch(JSONException e){
                     e.printStackTrace();
                     callback.onError(e.toString());

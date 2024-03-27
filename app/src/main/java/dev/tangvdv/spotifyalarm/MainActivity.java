@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.text.SpannableString;
@@ -285,12 +286,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUserProfileView(HashMap<String, Object> user){
-        Glide.with(context)
-                .load( (String) user.get("image"))
-                .apply(new RequestOptions()
-                        .transform(new CenterCrop(), new CircleCrop())
-                )
-                .into(binding.imageUserProfile);
+        if(user.get("image") == null){
+            Glide.with(context)
+                    .load(R.drawable.default_profile_picture)
+                    .apply(new RequestOptions()
+                            .transform(new CenterCrop(), new CircleCrop())
+                    )
+                    .into(binding.imageUserProfile);
+
+            binding.imageUserProfile.setColorFilter(getColor(R.color.light_grey), PorterDuff.Mode.SRC_IN);
+        }
+        else{
+            Glide.with(context)
+                    .load( (String) user.get("image"))
+                    .apply(new RequestOptions()
+                            .transform(new CenterCrop(), new CircleCrop())
+                    )
+                    .into(binding.imageUserProfile);
+        }
 
         userProfileDialog = new Dialog(context);
         userProfileDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -301,12 +314,25 @@ public class MainActivity extends AppCompatActivity {
         userProfileDialog.setContentView(binding.getRoot());
 
         binding.textUserProfile.setText( (String) user.get("name"));
-        Glide.with(context)
-                .load( (String) user.get("image"))
-                .apply(new RequestOptions()
-                        .transform(new CenterCrop(), new CircleCrop())
-                )
-                .into(binding.imageUserProfile);
+
+        if(user.get("image") == null){
+            Glide.with(context)
+                    .load(R.drawable.default_profile_picture)
+                    .apply(new RequestOptions()
+                            .transform(new CenterCrop(), new CircleCrop())
+                    )
+                    .into(binding.imageUserProfile);
+
+            binding.imageUserProfile.setColorFilter(getColor(R.color.light_grey), PorterDuff.Mode.SRC_IN);
+        }
+        else{
+            Glide.with(context)
+                    .load( (String) user.get("image"))
+                    .apply(new RequestOptions()
+                            .transform(new CenterCrop(), new CircleCrop())
+                    )
+                    .into(binding.imageUserProfile);
+        }
 
         setUserProfileBinding(binding);
     }
