@@ -40,6 +40,9 @@ import dev.tangvdv.spotifyalarm.databinding.UserProfileDialogBinding;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
@@ -153,7 +156,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void startAlarmService(){
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
-            startService(alarmServiceIntent);
+            ConnectionParams connectionParams =
+                    new ConnectionParams.Builder(this.getString(R.string.client_id))
+                            .setRedirectUri(this.getString(R.string.redirect_uri))
+                            .showAuthView(true)
+                            .build();
+
+            SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
+                @Override
+                public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                    startService(alarmServiceIntent);
+                }
+
+                @Override
+                public void onFailure(Throwable throwable) {
+                    Log.e(TAG, throwable.getMessage(), throwable);
+                    errorUserToast("Error connecting to spotify.\n Backup alarm will trigger instead");
+                    startService(alarmServiceIntent);
+                }
+            });
         }
     }
 
@@ -236,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
                 new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
 
         builder.setScopes(getResources().getStringArray(R.array.scopes));
+        builder.setShowDialog(true);
         AuthorizationRequest request = builder.build();
 
         AuthorizationClient.openLoginActivity(this, context.getResources().getInteger(R.integer.request_code) ,request);
