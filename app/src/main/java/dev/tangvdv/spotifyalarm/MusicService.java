@@ -2,6 +2,7 @@ package dev.tangvdv.spotifyalarm;
 
 import static java.lang.Thread.sleep;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -63,14 +64,12 @@ public class MusicService extends Service {
         hasSpotifyRemoteResponded = false;
         isBackupAlarmPlayed = false;
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
-        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
-            if(isNetworkConnected()){
-                setSpotifyAppRemote();
-                spotifyRemoteCheckThread();
-            }
-            else{
-                playBackupAlarm();
-            }
+        if(isNetworkConnected()){
+            setSpotifyAppRemote();
+            spotifyRemoteCheckThread();
+        }
+        else{
+            playBackupAlarm();
         }
 
         return START_STICKY;
@@ -135,7 +134,8 @@ public class MusicService extends Service {
             });
         }
         else {
-            Log.e(TAG, "SpotifyPlayerApi object null");
+            Log.e(TAG, "Playlist uri not found");
+            logFile.writeToFile(TAG, "Playlist uri not found");
             playBackupAlarm();
         }
     }
@@ -208,8 +208,6 @@ public class MusicService extends Service {
 
     private void alarmEnding(){
         stopForeground(STOP_FOREGROUND_REMOVE);
-        AlarmModel.getInstance().setAlarmOff();
-        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
         if(settingsModel.isRepeat()) setNextAlarm();
         checkMusicState();
     }

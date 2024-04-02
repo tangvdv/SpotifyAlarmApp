@@ -14,6 +14,8 @@ import androidx.core.app.NotificationCompat;
 
 import java.util.Objects;
 
+import dev.tangvdv.spotifyalarm.model.AlarmModel;
+
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
     private static final int NOTIFY_ID = 500;
@@ -21,6 +23,10 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         context.stopService(new Intent(context, AlarmManagerService.class));
+
+        AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
+        AlarmModel.getInstance().setAlarmOff();
+        AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
 
         createMusicNotification(context);
 
