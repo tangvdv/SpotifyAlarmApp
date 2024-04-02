@@ -96,8 +96,6 @@ public class MainActivity extends AppCompatActivity {
 
         isSpotifyActivityConnected = -1;
 
-        askNotificationPermission();
-
         sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
 
         alarmServiceIntent = new Intent(this, AlarmManagerService.class);
@@ -189,38 +187,43 @@ public class MainActivity extends AppCompatActivity {
         binding.setAlarmSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
-                    startAlarmService();
+                if(askNotificationPermission()){
+                    if(b){
+                        startAlarmService();
+                    }
+                    else{
+                        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
+                            AlarmModel.getInstance().setAlarmOff();
+                            stopService(alarmServiceIntent);
+                        }
+                    }
+
+                    Thread thread = new Thread() {
+                        @Override
+                        public void run() {
+                            while(b != (AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON)) {
+
+                                try {
+                                    sleep(100);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    alarmBindingState();
+                                }
+                            });
+
+                            saveAlarm();
+                        }
+                    };
+                    thread.start();
                 }
                 else{
-                    if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
-                        AlarmModel.getInstance().setAlarmOff();
-                        stopService(alarmServiceIntent);
-                    }
+                    alarmBindingState();
                 }
-
-                Thread thread = new Thread() {
-                    @Override
-                    public void run() {
-                        while(b != (AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON)) {
-
-                            try {
-                                sleep(100);
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                alarmBindingState();
-                            }
-                        });
-
-                        saveAlarm();
-                    }
-                };
-                thread.start();
             }
         });
 
@@ -542,11 +545,15 @@ public class MainActivity extends AppCompatActivity {
         AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
     }
 
-    private void askNotificationPermission(){
+    private boolean askNotificationPermission(){
         if(ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED){
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
+            return false;
+        }
+        else{
+            return true;
         }
     }
 
