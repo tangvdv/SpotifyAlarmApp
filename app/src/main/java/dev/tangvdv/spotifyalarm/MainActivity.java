@@ -14,7 +14,6 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -60,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
     private Dialog userProfileDialog;
     private MaterialTimePicker timePicker;
     private Intent alarmServiceIntent;
-    private SharedPreferences sharedPreferences;
     private int isSpotifyActivityConnected;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
@@ -95,8 +93,6 @@ public class MainActivity extends AppCompatActivity {
         context = this;
 
         isSpotifyActivityConnected = -1;
-
-        sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
 
         alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
@@ -163,14 +159,14 @@ public class MainActivity extends AppCompatActivity {
             SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
                 @Override
                 public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                    startService(alarmServiceIntent);
+                    startForegroundService(alarmServiceIntent);
                 }
 
                 @Override
                 public void onFailure(Throwable throwable) {
                     Log.e(TAG, throwable.getMessage(), throwable);
                     errorUserToast("Error connecting to spotify.\n Backup alarm will trigger instead");
-                    startService(alarmServiceIntent);
+                    startForegroundService(alarmServiceIntent);
                 }
             });
         }

@@ -26,7 +26,6 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
         AlarmModel.getInstance().setAlarmOff();
-        AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
 
         createMusicNotification(context);
 

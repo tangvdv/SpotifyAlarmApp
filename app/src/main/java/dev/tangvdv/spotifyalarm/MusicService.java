@@ -63,7 +63,6 @@ public class MusicService extends Service {
         logFile = new LogFile(this);
         hasSpotifyRemoteResponded = false;
         isBackupAlarmPlayed = false;
-        AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(this));
         if(isNetworkConnected()){
             setSpotifyAppRemote();
             spotifyRemoteCheckThread();
