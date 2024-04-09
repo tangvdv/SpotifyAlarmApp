@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private MaterialTimePicker timePicker;
     private Intent alarmServiceIntent;
     private int isSpotifyActivityConnected;
+    private boolean isAuth;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -93,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         context = this;
+
+        isAuth = AlarmSharedPreferences.isAuthSpotify(context);
 
         isSpotifyActivityConnected = -1;
 
@@ -152,25 +155,29 @@ public class MainActivity extends AppCompatActivity {
 
     private void startAlarmService(){
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
-            ConnectionParams connectionParams =
-                    new ConnectionParams.Builder(this.getString(R.string.client_id))
-                            .setRedirectUri(this.getString(R.string.redirect_uri))
-                            .showAuthView(true)
-                            .build();
+            if(!isAuth){
+                ConnectionParams connectionParams =
+                        new ConnectionParams.Builder(this.getString(R.string.client_id))
+                                .setRedirectUri(this.getString(R.string.redirect_uri))
+                                .showAuthView(true)
+                                .build();
 
-            SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
-                @Override
-                public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                    startForegroundService(alarmServiceIntent);
-                }
+                SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        AlarmSharedPreferences.saveAuthSpotify(context, true);
+                        startForegroundService(alarmServiceIntent);
+                    }
 
-                @Override
-                public void onFailure(Throwable throwable) {
-                    Log.e(TAG, throwable.getMessage(), throwable);
-                    errorUserToast("Error connecting to spotify.\n Backup alarm will trigger instead");
-                    startForegroundService(alarmServiceIntent);
-                }
-            });
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e(TAG, throwable.getMessage(), throwable);
+                    }
+                });
+            }
+            else{
+                startForegroundService(alarmServiceIntent);
+            }
         }
     }
 

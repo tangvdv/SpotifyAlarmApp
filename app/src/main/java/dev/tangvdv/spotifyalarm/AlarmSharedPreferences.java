@@ -25,10 +25,18 @@ public class AlarmSharedPreferences {
         editor.apply();
     }
 
+    private static void saveSharedPreferences(Context context, String tag, boolean data){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(tag, data);
+        editor.apply();
+    }
+
     public static void clearSharedPreferences(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove("TOKEN");
+        editor.remove("Auth");
         editor.remove("alarm");
         editor.remove("music");
         editor.remove("user");
@@ -38,6 +46,16 @@ public class AlarmSharedPreferences {
     public static String loadToken(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
         return sharedPreferences.getString("TOKEN", "");
+    }
+
+    public static void saveAuthSpotify(Context context, boolean isAuth){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        saveSharedPreferences(context, "Auth", isAuth);
+    }
+
+    public static boolean isAuthSpotify(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        return sharedPreferences.getBoolean("Auth", false);
     }
 
     public static void saveToken(Context context, String token){
