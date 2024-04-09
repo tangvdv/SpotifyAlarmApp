@@ -36,6 +36,9 @@
     <string name="open_spotify_app_title">Open Spotify application</string>
     <string name="disconnect_title">Disconnect</string>
 
+    // Notification
+    <string name="notification_stop_alarm">Click to\nturn off</string>
+
     // Errors
     <string name="network_error">Network connection error</string>
     <string name="spotify_activity_error">Failed to open spotify activity</string>

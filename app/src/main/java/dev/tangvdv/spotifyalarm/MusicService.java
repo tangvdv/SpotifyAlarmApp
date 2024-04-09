@@ -93,6 +93,7 @@ public class MusicService extends Service {
                 if(!isBackupAlarmPlayed && !hasSpotifyRemoteResponded){
                     logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
                     mySpotifyAppRemote = spotifyAppRemote;
+                    AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
                     playSpotifyAlarm();
                     hasSpotifyRemoteResponded = true;
                 }
