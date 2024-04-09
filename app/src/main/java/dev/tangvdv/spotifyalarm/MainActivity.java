@@ -18,8 +18,10 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
@@ -542,15 +544,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean askNotificationPermission(){
+        boolean res = true;
         if(ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED){
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
-            return false;
+            res = false;
         }
-        else{
-            return true;
+
+        if (!Settings.canDrawOverlays(this)) {
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+
+            res = false;
         }
+
+        return res;
     }
 
     private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(

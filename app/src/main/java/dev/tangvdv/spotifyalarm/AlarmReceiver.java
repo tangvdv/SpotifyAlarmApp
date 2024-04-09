@@ -1,8 +1,5 @@
 package dev.tangvdv.spotifyalarm;
 
-import static android.content.Context.NOTIFICATION_SERVICE;
-import static androidx.core.content.ContextCompat.getSystemService;
-
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -31,8 +28,11 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         AlarmWakeLock.acquireAlarmWakeLock(context);
         Intent serviceIntent = new Intent(context, MusicService.class);
+        Intent screenOnIntent = new Intent(context, AlarmLockScreenActivity.class);
+        screenOnIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try{
             context.startForegroundService(serviceIntent);
+            context.startActivity(screenOnIntent);
         }
         catch (IllegalStateException illegalStateException){
             Log.e("AlarmReceiver", Objects.requireNonNull(illegalStateException.getMessage()));
