@@ -1,5 +1,8 @@
 package dev.tangvdv.spotifyalarm.model;
 
+import android.bluetooth.BluetoothLeAudioCodecConfig;
+import android.media.Ringtone;
+
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import java.util.Calendar;
@@ -11,6 +14,7 @@ public class AlarmModel {
     private int hour;
     private int minute;
     private String playlist_uri;
+    private Ringtone backupAlarmRingtone;
     public enum State {
         OFF,
         ON
@@ -85,6 +89,14 @@ public class AlarmModel {
 
     public void setAlarmOn() {
         currentState = State.ON;
+    }
+
+    public Ringtone getBackupAlarmRingtone() {
+        return backupAlarmRingtone;
+    }
+
+    public void setBackupAlarmRingtone(Ringtone backupAlarmRingtone) {
+        this.backupAlarmRingtone = backupAlarmRingtone;
     }
 
     public HashMap<String, Object> getAlarmModelContent(){

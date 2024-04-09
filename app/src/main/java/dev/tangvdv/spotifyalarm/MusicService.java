@@ -2,7 +2,6 @@ package dev.tangvdv.spotifyalarm;
 
 import static java.lang.Thread.sleep;
 
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -124,11 +123,21 @@ public class MusicService extends Service {
             mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM).setResultCallback(new CallResult.ResultCallback<Empty>() {
                 @Override
                 public void onResult(Empty empty) {
-                    isPaused = false;
-                    Log.v(TAG, "SpotifyAlarmPlay");
-                    logFile.writeToFile(TAG, "SpotifyAlarmPlay");
+                    mySpotifyAppRemote.getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+                        @Override
+                        public void onResult(PlayerState playerState) {
+                            isPaused = playerState.isPaused;
+                            Log.v(TAG, "SpotifyAlarmPlay");
+                            logFile.writeToFile(TAG, "SpotifyAlarmPlay");
 
-                    alarmEnding();
+                            if(isPaused){
+                                playBackupAlarm();
+                            }
+                            else{
+                                alarmEnding();
+                            }
+                        }
+                    });
                 }
             });
         }
@@ -197,6 +206,7 @@ public class MusicService extends Service {
             defaultRingtone.setVolume(settingsModel.getVolume());
         }
         defaultRingtone.play();
+        AlarmModel.getInstance().setBackupAlarmRingtone(defaultRingtone);
         isPaused = false;
         isBackupAlarmPlayed = true;
 
@@ -208,6 +218,7 @@ public class MusicService extends Service {
     private void alarmEnding(){
         stopForeground(STOP_FOREGROUND_REMOVE);
         if(settingsModel.isRepeat()) setNextAlarm();
+        AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
         checkMusicState();
     }
 
@@ -247,8 +258,6 @@ public class MusicService extends Service {
 
     @Override
     public void onDestroy() {
-        if(defaultRingtone != null) defaultRingtone.stop();
-        if(mySpotifyAppRemote != null) mySpotifyAppRemote.getPlayerApi().pause();
         AlarmWakeLock.releaseAlarmWakeLock(this);
         super.onDestroy();
     }

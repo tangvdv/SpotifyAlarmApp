@@ -22,8 +22,8 @@ public class AlarmWakeLock {
         wakeLock.acquire();
         Log.v(TAG, "Acquiring cpu wake lock");
         LogFile logFile = new LogFile(context);
-        logFile.writeToFile(TAG, "Acquiring cpu wake lock");
         logFile.separator();
+        logFile.writeToFile(TAG, "Acquiring cpu wake lock");
     }
 
     public static void releaseAlarmWakeLock(Context context) {
