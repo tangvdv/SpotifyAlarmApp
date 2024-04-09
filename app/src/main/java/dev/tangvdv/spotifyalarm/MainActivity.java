@@ -194,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(askNotificationPermission()){
                     if(b){
+                        setCalendar();
                         startAlarmService();
                     }
                     else{
@@ -437,8 +438,6 @@ public class MainActivity extends AppCompatActivity {
                 AlarmModel.getInstance().setMinute(timePicker.getMinute());
 
                 setCalendar();
-                alarmTextValue();
-                saveAlarm();
 
                 if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                     AlarmModel.getInstance().setAlarmOff();
@@ -459,6 +458,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         AlarmModel.getInstance().setCalendar(calendar);
+
+        alarmTextValue();
+        saveAlarm();
     }
 
     private void alarmTextValue(){
