@@ -44,7 +44,7 @@ public class LogFile extends AppCompatActivity {
         String separator = "--------------------------------------------------";
         String content = String.format("%s\n", separator);
         try {
-            writer = new FileOutputStream(file, true); // Append mode
+            writer = new FileOutputStream(file, true);
             writer.write(content.getBytes());
             writer.close();
         } catch (Exception e) {
@@ -60,22 +60,22 @@ public class LogFile extends AppCompatActivity {
         String product = "Product : " + Build.PRODUCT;
 
         separator();
-        String content = String.format("%s\n%s\n%s\n%s\n%s\n%s\n%s\n", os_version, sdk_version, device, model, product);
-        separator();
+        String content = String.format("%s\n%s\n%s\n%s\n%s\n", os_version, sdk_version, device, model, product);
         try {
-            writer = new FileOutputStream(file, true); // Append mode
+            writer = new FileOutputStream(file, true);
             writer.write(content.getBytes());
             writer.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        separator();
     }
 
     public void writeToFile(String title, String message) {
         Date date = new Date();
         String content = dateFormat.format(date) + "\t" + title + "\t" + message + "\n";
         try {
-            writer = new FileOutputStream(file, true); // Append mode
+            writer = new FileOutputStream(file, true);
             writer.write(content.getBytes());
             writer.close();
         } catch (Exception e) {
