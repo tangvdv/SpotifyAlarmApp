@@ -2,6 +2,7 @@ package dev.tangvdv.spotifyalarm;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.PixelFormat;
@@ -29,9 +30,13 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
     private View overlayView;
     private WindowManager.LayoutParams params;
 
+    public static Activity lockScreenActivity;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        lockScreenActivity = this;
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 

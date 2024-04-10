@@ -251,6 +251,7 @@ public class MusicService extends Service {
                     }
                 }
 
+                AlarmLockScreenActivity.lockScreenActivity.finish();
                 stopSelf();
             }
         });
