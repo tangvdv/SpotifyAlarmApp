@@ -99,7 +99,6 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
         windowManager.removeView(overlayView);
         handler.removeCallbacksAndMessages(null);
         Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         sendBroadcast(intent);
     }
 

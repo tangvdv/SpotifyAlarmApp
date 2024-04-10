@@ -251,7 +251,13 @@ public class MusicService extends Service {
                     }
                 }
 
-                AlarmLockScreenActivity.lockScreenActivity.finish();
+                if(AlarmLockScreenActivity.lockScreenActivity != null) {
+                    AlarmLockScreenActivity.lockScreenActivity.finish();
+                }
+                else{
+                    Intent intent = new Intent(getApplicationContext(), NotificationShutAlarmOffReceiver.class);
+                    sendBroadcast(intent);
+                }
                 stopSelf();
             }
         });
