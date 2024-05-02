@@ -16,7 +16,7 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 
 public class NotificationShutAlarmOffReceiver extends BroadcastReceiver {
-    private static final int NOTIFY_ID = 500;
+    private static final int NOTIFY_ID = 42;
 
     @Override
     public void onReceive(Context context, Intent intent) {

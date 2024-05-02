@@ -24,7 +24,7 @@ import dev.tangvdv.spotifyalarm.R;
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
     private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
-    private static final int NOTIFY_ID = 42;
+    private static final int NOTIFY_ID = 51;
     private AlarmManager alarmManager;
     private PendingIntent pendingIntent;
 

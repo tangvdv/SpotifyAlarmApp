@@ -15,7 +15,7 @@ import dev.tangvdv.spotifyalarm.model.AlarmModel;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
-    private static final int NOTIFY_ID = 500;
+    private static final int NOTIFY_ID = 42;
 
     @Override
     public void onReceive(Context context, Intent intent) {
