@@ -1,74 +1,190 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/dark_grey"
     tools:context=".MainActivity">
 
-        <LinearLayout
+    <LinearLayout
+        android:id="@+id/mainLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
         android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:layout_margin="10dp">
+
+            <Button
+                android:id="@+id/btnUserProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginHorizontal="4dp"
+                android:shadowColor="@color/black"/>
+
+            <ImageView
+                android:id="@+id/imageUserProfile"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_marginTop="30dp">
+
+            <Button
+                android:id="@+id/btnMusicSelection"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="50dp"
+                android:layout_marginRight="50dp"
+                android:backgroundTint="@color/grey"
+                app:cornerRadius="10dp" />
+
+            <ImageView
+                android:id="@+id/imagePlaylist"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="60dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp" />
+
+
+            <TextView
+                android:id="@+id/textPlaylistName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="150dp"
+                android:layout_marginTop="30dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="40dp"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/textPlaylistOwner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="150dp"
+                android:layout_marginTop="50dp"
+                android:layout_marginEnd="60dp"
+                android:layout_marginBottom="30dp"
+                android:textColor="@color/light_grey" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="53dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
             android:orientation="horizontal">
 
-            <Spinner
-                android:id="@+id/spinnerPlaylist"
-                android:layout_width="321dp"
-                android:layout_height="match_parent"
-                android:spinnerMode="dropdown"
-                android:padding="8dp"
-                android:textColor="@color/white"/>
-
-            <Button
-                android:id="@+id/btnSelect"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Select" />
-
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/btnAlarm"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="20dp"
-            android:layout_marginTop="50dp"
-            android:layout_gravity="center"
-            android:text="Select \nTime"/>
-
-            <LinearLayout
-                android:paddingTop="20dp"
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_height="60dp"
+                android:layout_weight="1">
 
                 <Button
-                    android:id="@+id/btnSetAlarm"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/btnSetTime"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_gravity="left"
-                    android:text="Set Alarm"/>
+                    android:backgroundTint="@color/grey"
+                    app:cornerRadius="10dp" />
+
+                <Switch
+                    android:id="@+id/setAlarmSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="5dp" />
+
+                <TextView
+                    android:id="@+id/alarmTimeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_margin="5dp"
+                    android:textColor="@color/light_grey"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/alarmDateText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/alarmTimeText"
+                    android:layout_alignParentTop="true"
+                    android:layout_margin="10dp"
+                    android:textColor="@color/light_grey"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/alarmTimeLeftText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/alarmTimeText"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    android:visibility="gone" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="10dp"
+                android:layout_height="match_parent"
+                android:visibility="invisible"/>
+
+
+            <RelativeLayout
+                android:layout_width="55dp"
+                android:layout_height="60dp">
 
                 <Button
-                    android:id="@+id/btnCancelAlarm"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/btnSettings"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_gravity="right"
-                    android:text="Cancel Alarm" />
+                    app:cornerRadius="10dp"
+                    android:backgroundTint="@color/grey"/>
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/testLayout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical" />
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/settings"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    app:tint="@color/light_grey" />
+            </RelativeLayout>
         </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:visibility="gone"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_version"
+        android:textSize="30px"
+        android:layout_margin="10px"
+        android:textColor="@color/light_grey"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"/>
+</RelativeLayout>
