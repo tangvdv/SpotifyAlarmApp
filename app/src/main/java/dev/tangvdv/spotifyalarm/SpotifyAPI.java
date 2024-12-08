@@ -53,18 +53,20 @@ public class SpotifyAPI {
                     JSONArray array = new JSONArray(obj.getString("items"));
                     List<MusicModel> musicModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
-                        JSONObject playlist = array.getJSONObject(i);
-                        JSONObject owner = playlist.getJSONObject("owner");
-                        JSONObject images = new JSONArray(playlist.getString("images")).getJSONObject(0);
-                        MusicModel musicModel = new MusicModel(
-                                playlist.getString("id"),
-                                playlist.getString("name"),
-                                playlist.getString("uri"),
-                                images.getString("url"),
-                                new String[] {owner.getString("display_name")},
-                                "playlist"
-                        );
-                        musicModelList.add(musicModel);
+                        if(!array.isNull(i)){
+                            JSONObject playlist = array.getJSONObject(i);
+                            JSONObject owner = playlist.getJSONObject("owner");
+                            JSONObject images = new JSONArray(playlist.getString("images")).getJSONObject(0);
+                            MusicModel musicModel = new MusicModel(
+                                    playlist.getString("id"),
+                                    playlist.getString("name"),
+                                    playlist.getString("uri"),
+                                    images.getString("url"),
+                                    new String[] {owner.getString("display_name")},
+                                    "playlist"
+                            );
+                            musicModelList.add(musicModel);
+                        }
                     }
 
                     callback.onSuccess(musicModelList);
@@ -104,23 +106,25 @@ public class SpotifyAPI {
                     JSONArray array = new JSONArray(obj.getString("items"));
                     List<MusicModel> musicModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
-                        JSONObject album = array.getJSONObject(i).getJSONObject("album");
-                        JSONArray artist = album.getJSONArray("artists");
-                        String[] artists_name = new String[artist.length()];
-                        for(int j = 0; j < artist.length(); j++){
-                            artists_name[j] = artist.getJSONObject(j).getString("name");
-                        }
+                        if(!array.isNull(i)) {
+                            JSONObject album = array.getJSONObject(i).getJSONObject("album");
+                            JSONArray artist = album.getJSONArray("artists");
+                            String[] artists_name = new String[artist.length()];
+                            for(int j = 0; j < artist.length(); j++){
+                                artists_name[j] = artist.getJSONObject(j).getString("name");
+                            }
 
-                        JSONObject images = new JSONArray(album.getString("images")).getJSONObject(0);
-                        MusicModel musicModel = new MusicModel(
-                                album.getString("id"),
-                                album.getString("name"),
-                                album.getString("uri"),
-                                images.getString("url"),
-                                artists_name,
-                                "album"
-                        );
-                        musicModelList.add(musicModel);
+                            JSONObject images = new JSONArray(album.getString("images")).getJSONObject(0);
+                            MusicModel musicModel = new MusicModel(
+                                    album.getString("id"),
+                                    album.getString("name"),
+                                    album.getString("uri"),
+                                    images.getString("url"),
+                                    artists_name,
+                                    "album"
+                            );
+                            musicModelList.add(musicModel);
+                        }
                     }
 
                     callback.onSuccess(musicModelList);
@@ -160,18 +164,20 @@ public class SpotifyAPI {
                     JSONArray array = new JSONArray(new JSONObject(obj.getString("artists")).getString("items"));
                     List<MusicModel> musicModelList = new ArrayList<>(array.length());
                     for (int i = 0; i < array.length(); i++) {
-                        JSONObject artist = array.getJSONObject(i);
+                        if(!array.isNull(i)) {
+                            JSONObject artist = array.getJSONObject(i);
 
-                        JSONObject images = new JSONArray(artist.getString("images")).getJSONObject(0);
-                        MusicModel musicModel = new MusicModel(
-                                artist.getString("id"),
-                                artist.getString("name"),
-                                artist.getString("uri"),
-                                images.getString("url"),
-                                new String[0],
-                                "artist"
-                        );
-                        musicModelList.add(musicModel);
+                            JSONObject images = new JSONArray(artist.getString("images")).getJSONObject(0);
+                            MusicModel musicModel = new MusicModel(
+                                    artist.getString("id"),
+                                    artist.getString("name"),
+                                    artist.getString("uri"),
+                                    images.getString("url"),
+                                    new String[0],
+                                    "artist"
+                            );
+                            musicModelList.add(musicModel);
+                        }
                     }
 
                     callback.onSuccess(musicModelList);
