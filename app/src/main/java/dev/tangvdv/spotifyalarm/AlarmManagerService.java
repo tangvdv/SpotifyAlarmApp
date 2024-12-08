@@ -103,7 +103,6 @@ public class AlarmManagerService extends Service {
     @Override
     public void onDestroy() {
         stopForeground(STOP_FOREGROUND_REMOVE);
-        if(alarmManager != null && pendingIntent != null) alarmManager.cancel(pendingIntent);
         super.onDestroy();
     }
 }

@@ -11,7 +11,9 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -63,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     private Intent alarmServiceIntent;
     private int isSpotifyActivityConnected;
     private boolean isAuth;
+    private AlarmManager alarmManager;
+    private PendingIntent alarmPendingIntent;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -102,6 +106,21 @@ public class MainActivity extends AppCompatActivity {
         alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
+
+        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        // CHECK CURRENT ALARM
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        alarmPendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
+        if (alarmPendingIntent != null) {
+            if(Objects.equals(alarmPendingIntent.getCreatorPackage(), context.getPackageName())){
+                AlarmModel.getInstance().setAlarmOn();
+                Log.v(TAG, "An alarm is active. ");
+            }
+        } else {
+            AlarmModel.getInstance().setAlarmOff();
+            Log.e(TAG, "No active alarm found.");
+        }
 
         setupActivityViews();
     }
@@ -200,6 +219,9 @@ public class MainActivity extends AppCompatActivity {
                     else{
                         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                             AlarmModel.getInstance().setAlarmOff();
+                            if(alarmPendingIntent != null){
+                                alarmManager.cancel(alarmPendingIntent);
+                            }
                             stopService(alarmServiceIntent);
                         }
                     }
@@ -495,7 +517,6 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 while(!MainActivity.this.isDestroyed() && AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
                     try {
-                        Log.i(TAG, "Tick");
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
