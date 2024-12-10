@@ -19,23 +19,22 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        context.stopService(new Intent(context, AlarmManagerService.class));
-
-        AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
-        AlarmModel.getInstance().setAlarmOff();
-
-        createMusicNotification(context);
-
-        AlarmWakeLock.acquireAlarmWakeLock(context);
-        Intent serviceIntent = new Intent(context, MusicService.class);
-        Intent screenOnIntent = new Intent(context, AlarmLockScreenActivity.class);
-        screenOnIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try{
+            context.stopService(new Intent(context, AlarmManagerService.class));
+
+            AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
+            AlarmModel.getInstance().setAlarmOff();
+
+            createMusicNotification(context);
+
+            AlarmWakeLock.acquireAlarmWakeLock(context);
+            Intent serviceIntent = new Intent(context, MusicService.class);
             context.startForegroundService(serviceIntent);
-            context.startActivity(screenOnIntent);
         }
-        catch (IllegalStateException illegalStateException){
-            Log.e("AlarmReceiver", Objects.requireNonNull(illegalStateException.getMessage()));
+        catch (Exception e){
+            LogFile logFile = new LogFile(context);
+            logFile.writeToFile("AlarmReceiver", Objects.requireNonNull(e.getMessage()));
+            Log.e("AlarmReceiver", Objects.requireNonNull(e.getMessage()));
         }
     }
 

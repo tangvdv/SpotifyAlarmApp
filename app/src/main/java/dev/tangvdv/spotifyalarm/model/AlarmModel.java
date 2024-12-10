@@ -1,6 +1,5 @@
 package dev.tangvdv.spotifyalarm.model;
 
-import android.bluetooth.BluetoothLeAudioCodecConfig;
 import android.media.Ringtone;
 
 import com.spotify.android.appremote.api.SpotifyAppRemote;
@@ -20,7 +19,14 @@ public class AlarmModel {
         ON
     }
 
+    public enum Type {
+        BACKUP,
+        SPOTIFY
+    }
+
     private State currentState;
+
+    private Type currentType;
 
     private SpotifyAppRemote spotifyAppRemote;
 
@@ -90,6 +96,14 @@ public class AlarmModel {
     public void setAlarmOn() {
         currentState = State.ON;
     }
+
+    public Type getCurrentType() { return currentType; }
+
+    public void setAlarmBackupType() { currentType = Type.BACKUP; }
+
+    public void setAlarmSpotifyType() { currentType = Type.SPOTIFY; }
+
+    public void resetAlarmType() { currentType = null; }
 
     public Ringtone getBackupAlarmRingtone() {
         return backupAlarmRingtone;

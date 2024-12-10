@@ -99,30 +99,37 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
-        isAuth = AlarmSharedPreferences.isAuthSpotify(context);
+        try{
+            isAuth = AlarmSharedPreferences.isAuthSpotify(context);
 
-        isSpotifyActivityConnected = -1;
+            isSpotifyActivityConnected = -1;
 
-        alarmServiceIntent = new Intent(this, AlarmManagerService.class);
+            alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
-        AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
+            AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
 
-        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-        // CHECK CURRENT ALARM
-        Intent intent = new Intent(context, AlarmReceiver.class);
-        alarmPendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
-        if (alarmPendingIntent != null) {
-            if(Objects.equals(alarmPendingIntent.getCreatorPackage(), context.getPackageName())){
-                AlarmModel.getInstance().setAlarmOn();
-                Log.v(TAG, "An alarm is active. ");
+            // CHECK CURRENT ALARM
+            Intent intent = new Intent(context, AlarmReceiver.class);
+            alarmPendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
+            if (alarmPendingIntent != null) {
+                if(Objects.equals(alarmPendingIntent.getCreatorPackage(), context.getPackageName())){
+                    AlarmModel.getInstance().setAlarmOn();
+                    Log.v(TAG, "An alarm is active. ");
+                }
+            } else {
+                AlarmModel.getInstance().setAlarmOff();
+                Log.e(TAG, "No active alarm found.");
             }
-        } else {
-            AlarmModel.getInstance().setAlarmOff();
-            Log.e(TAG, "No active alarm found.");
-        }
 
-        setupActivityViews();
+            setupActivityViews();
+        }
+        catch (Exception e){
+            LogFile logFile = new LogFile(context);
+            logFile.writeToFile("AlarmReceiver", Objects.requireNonNull(e.getMessage()));
+            Log.e("AlarmReceiver", Objects.requireNonNull(e.getMessage()));
+        }
     }
 
     private void setupActivityViews(){
