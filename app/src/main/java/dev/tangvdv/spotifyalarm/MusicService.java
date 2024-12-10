@@ -3,6 +3,7 @@ package dev.tangvdv.spotifyalarm;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -31,7 +32,7 @@ import java.util.Objects;
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
     private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
-    private static final int NOTIFY_ID = 51;
+    private static final int NOTIFY_ID = 42;
     private SpotifyAppRemote mySpotifyAppRemote;
 
     private LogFile logFile;
@@ -191,22 +192,44 @@ public class MusicService extends Service {
 
     private void alarmEnding(){
         isAlarmRinging = true;
+        stopForeground(STOP_FOREGROUND_REMOVE);
 
         try{
             Intent lockScreen = new Intent(context, AlarmLockScreenActivity.class);
             lockScreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(lockScreen);
+
+            createMusicNotification();
+            shutAlarmOffHandler();
         }
         catch (IllegalStateException illegalStateException){
             logFile.writeToFile(TAG, Objects.requireNonNull(illegalStateException.getMessage()));
             Log.e(TAG, Objects.requireNonNull(illegalStateException.getMessage()));
         }
 
-        shutAlarmOffHandler();
-
-        stopForeground(STOP_FOREGROUND_REMOVE);
         if(settingsModel.isRepeat()) setNextAlarm();
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
+    }
+
+    private void createMusicNotification(){
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if(notificationManager != null){
+            Intent intent = new Intent(context, NotificationShutAlarmOffReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                    .setSmallIcon(R.mipmap.app_logo)
+                    .setOngoing(true)
+                    .setContentTitle("Alarm is ringing ! Click to shut alarm off")
+                    .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                    .setContentIntent(pendingIntent)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .addAction(R.mipmap.app_logo, "Stop", pendingIntent);
+
+
+            notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
+        }
     }
 
     private void setNextAlarm(){
