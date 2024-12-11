@@ -1,7 +1,7 @@
 <resources>
     // Application
     <string name="app_name">SpotifyAlarm</string>
-    <string name="app_version">v0.9.2</string>
+    <string name="app_version">v0.9.3</string>
     <string name="spotify_api_uri">https://api.spotify.com/v1</string>
     <string-array name="scopes">
         <item>streaming</item>

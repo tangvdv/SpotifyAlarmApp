@@ -32,35 +32,53 @@ public class AlarmSharedPreferences {
         editor.apply();
     }
 
+    private static void saveSharedPreferences(Context context, String tag, Long data){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(tag, data);
+        editor.apply();
+    }
+
     public static void clearSharedPreferences(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove("TOKEN");
-        editor.remove("Auth");
+        editor.remove("token");
+        editor.remove("auth");
         editor.remove("alarm");
         editor.remove("music");
         editor.remove("user");
+        editor.remove("token_expiration_time");
         editor.apply();
     }
 
     public static String loadToken(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        return sharedPreferences.getString("TOKEN", "");
+        return sharedPreferences.getString("token", "");
     }
 
     public static void saveAuthSpotify(Context context, boolean isAuth){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        saveSharedPreferences(context, "Auth", isAuth);
+        saveSharedPreferences(context, "auth", isAuth);
     }
 
     public static boolean isAuthSpotify(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        return sharedPreferences.getBoolean("Auth", false);
+        return sharedPreferences.getBoolean("auth", false);
     }
 
     public static void saveToken(Context context, String token){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        saveSharedPreferences(context, "TOKEN", token);
+        saveSharedPreferences(context, "token", token);
+    }
+
+    public static void saveExpirationTimeToken(Context context, Long time){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        saveSharedPreferences(context, "token_expiration_time", time);
+    }
+
+    public static Long loadExpirationTimeToken(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        return sharedPreferences.getLong("token_expiration_time", System.currentTimeMillis());
     }
 
     public static HashMap<String, Object> loadSettings(Context context){

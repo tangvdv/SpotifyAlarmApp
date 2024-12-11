@@ -1,11 +1,11 @@
 package dev.tangvdv.spotifyalarm;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MusicLibraryActivity extends AppCompatActivity {
+public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAuthHelper.SpotifyAuthCallback {
     private static final String TAG = "MusicLibraryActivity";
     private Context context;
 
@@ -40,6 +40,7 @@ public class MusicLibraryActivity extends AppCompatActivity {
     private boolean errorResponse = true;
     private String token;
     private SpotifyAPI spotifyAPI;
+    private SpotifyAuthHelper spotifyAuthHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,18 +57,27 @@ public class MusicLibraryActivity extends AppCompatActivity {
             filterTypes = new ArrayList<>(3);
             musicModelList = new ArrayList<>();
 
-            SharedPreferences sharedPreferences = this.getSharedPreferences("App", Context.MODE_PRIVATE);
-            token = AlarmSharedPreferences.loadToken(context);
-            if(token != null){
-                getLibrary(token);
-            }
-            else{
-                Log.e(TAG, "TOKEN is null");
-                setResultActivity(Activity.RESULT_CANCELED, context.getString(R.string.token_null));
-            }
-
-            bindingManager();
+            spotifyAuthHelper = new SpotifyAuthHelper(this, this);
+            spotifyAuthHelper.startSpotifyActivity(this);
         }
+    }
+
+    @Override
+    public void onSpotifyConnected(String token) {
+        getLibrary(token);
+        bindingManager();
+    }
+
+    @Override
+    public void onSpotifyConnectionError(String error) {
+        setResultActivity(Activity.RESULT_CANCELED, error);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        spotifyAuthHelper.handlerActivityResult(requestCode, resultCode, data);
     }
 
     private void bindingManager(){

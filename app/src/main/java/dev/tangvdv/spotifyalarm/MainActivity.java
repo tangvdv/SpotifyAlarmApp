@@ -1,11 +1,10 @@
 package dev.tangvdv.spotifyalarm;
 
-import static java.lang.Thread.sleep;
-
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -46,16 +45,14 @@ import com.google.android.material.timepicker.TimeFormat;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
-import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationClient;
-import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper.SpotifyAuthCallback {
     private static final String TAG = "MainActivity";
 
     private Context context;
@@ -63,10 +60,11 @@ public class MainActivity extends AppCompatActivity {
     private Dialog userProfileDialog;
     private MaterialTimePicker timePicker;
     private Intent alarmServiceIntent;
-    private int isSpotifyActivityConnected;
+    private boolean isSpotifyActivityConnected;
     private boolean isAuth;
     private AlarmManager alarmManager;
     private PendingIntent alarmPendingIntent;
+    private SpotifyAuthHelper spotifyAuthHelper;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -99,10 +97,10 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
+        isSpotifyActivityConnected = false;
+
         try{
             isAuth = AlarmSharedPreferences.isAuthSpotify(context);
-
-            isSpotifyActivityConnected = -1;
 
             alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
@@ -123,7 +121,17 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "No active alarm found.");
             }
 
-            setupActivityViews();
+            if (isNetworkConnected()){
+                binding.mainLayout.setVisibility(View.GONE);
+                binding.progressBar.setVisibility(View.VISIBLE);
+
+                spotifyAuthHelper = new SpotifyAuthHelper(this, this);
+
+                spotifyAuthHelper.startSpotifyActivity(this);
+            }
+            else{
+                setupActivityViews();
+            }
         }
         catch (Exception e){
             LogFile logFile = new LogFile(context);
@@ -132,51 +140,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onSpotifyConnected(String token) {
+        isSpotifyActivityConnected = true;
+        setupActivityViews();
+    }
+
+    @Override
+    public void onSpotifyConnectionError(String error) {
+        setupActivityViews();
+        errorUserToast(error);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        spotifyAuthHelper.handlerActivityResult(requestCode, resultCode, data);
+    }
+
     private void setupActivityViews(){
-        if (isNetworkConnected() && isSpotifyActivityConnected == -1){
-            startSpotifyActivity();
-            isSpotifyActivityConnected = 0;
-        }
+        binding.mainLayout.setVisibility(View.VISIBLE);
+        binding.progressBar.setVisibility(View.GONE);
 
-        Thread setupThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        binding.mainLayout.setVisibility(View.GONE);
-                        binding.progressBar.setVisibility(View.VISIBLE);
-                    }
-                });
+        getUserProfileData();
+        setPlaylistLayout();
 
-                while (isSpotifyActivityConnected == 0){
-                    try {
-                        sleep(100);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+        bindingManager();
 
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        binding.mainLayout.setVisibility(View.VISIBLE);
-                        binding.progressBar.setVisibility(View.GONE);
-
-                        getUserProfileData();
-                        setPlaylistLayout();
-
-                        bindingManager();
-
-                        setCalendar();
-                        alarmTextValue();
-                        alarmBindingState();
-                    }
-                });
-            }
-        });
-
-        setupThread.start();
+        setCalendar();
+        alarmTextValue();
+        alarmBindingState();
     }
 
     private void startAlarmService(){
@@ -262,16 +256,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if(isNetworkConnected() && isSpotifyActivityConnected == 1) {
-            binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(context, MusicLibraryActivity.class);
-                    musicActivityResult.launch(intent);
-                }
-            });
-        }
-
         binding.btnSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -288,32 +272,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
 
-    private void startSpotifyActivity(){
-        AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
-
-        builder.setScopes(getResources().getStringArray(R.array.scopes));
-        builder.setShowDialog(true);
-        AuthorizationRequest request = builder.build();
-
-        AuthorizationClient.openLoginActivity(this, context.getResources().getInteger(R.integer.request_code) ,request);
-    }
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
-            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
-            if (response.getType() == AuthorizationResponse.Type.TOKEN) {
-                AlarmSharedPreferences.saveToken(context, response.getAccessToken());
-                isSpotifyActivityConnected = 1;
-            }
-            else{
-                isSpotifyActivityConnected = -1;
-                Log.e(TAG, "Response error : "+response.getError());
-                errorUserToast(context.getString(R.string.spotify_activity_error));
-            }
+        if(isSpotifyActivityConnected){
+            binding.btnMusicSelection.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(context, MusicLibraryActivity.class);
+                    musicActivityResult.launch(intent);
+                }
+            });
         }
     }
 
@@ -324,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
             setUserProfileView(user);
         }
         else {
-            if(isNetworkConnected() && isSpotifyActivityConnected == 1){
+            if(isSpotifyActivityConnected){
                 SpotifyAPI spotifyAPI = new SpotifyAPI(context, AlarmSharedPreferences.loadToken(context));
                 spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
                     @Override
