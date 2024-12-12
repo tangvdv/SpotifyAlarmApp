@@ -165,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
 
         bindingManager();
 
-        setCalendar();
         alarmTextValue();
         alarmBindingState();
     }
@@ -189,7 +188,6 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(askNotificationPermission()){
                     if(b){
-                        setCalendar();
                         startAlarmService();
                     }
                     else{
@@ -276,12 +274,7 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
                         user.put("name", name);
                         AlarmSharedPreferences.saveUser(context, user);
 
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                setUserProfileView(user);
-                            }
-                        });
+                        setUserProfileView(user);
                     }
 
                     @Override
@@ -408,8 +401,6 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
                 AlarmModel.getInstance().setHour(timePicker.getHour());
                 AlarmModel.getInstance().setMinute(timePicker.getMinute());
 
-                setCalendar();
-
                 if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                     AlarmModel.getInstance().setAlarmOff();
                     startAlarmService();
@@ -418,31 +409,12 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
         });
     }
 
-    private void setCalendar(){
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, AlarmModel.getInstance().getHour());
-        calendar.set(Calendar.MINUTE, AlarmModel.getInstance().getMinute());
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        if(calendar.getTimeInMillis() < System.currentTimeMillis()){
-            calendar.add(Calendar.DATE, 1);
-        }
-
-        AlarmModel.getInstance().setCalendar(calendar);
-
-        alarmTextValue();
-        saveAlarm();
-    }
-
     private void alarmTextValue(){
         if(AlarmModel.getInstance().getCalendar() != null) {
             String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
             String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
             binding.alarmTimeText.setText(String.format("%s:%s", formattedHour, formattedMinute));
             binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(AlarmModel.getInstance().getCalendar().getTime()));
-        }else{
-            binding.alarmTimeText.setVisibility(View.GONE);
-            binding.alarmDateText.setVisibility(View.GONE);
         }
     }
 

@@ -9,7 +9,6 @@ import java.util.HashMap;
 
 public class AlarmModel {
     private static AlarmModel instance;
-    private Calendar calendar;
     private int hour;
     private int minute;
     private String playlist_uri;
@@ -31,7 +30,6 @@ public class AlarmModel {
     private SpotifyAppRemote spotifyAppRemote;
 
     private AlarmModel(){
-        this.calendar = Calendar.getInstance();
         this.currentState = State.OFF;
     }
 
@@ -49,9 +47,20 @@ public class AlarmModel {
         currentState = alarm.containsKey("state") ? State.valueOf((String) alarm.get("state")) : State.OFF;
     }
 
-    public Calendar getCalendar() { return calendar; }
+    public Calendar getCalendar() { return setCalendar(); }
 
-    public void setCalendar(Calendar calendar) { this.calendar = calendar; }
+    private Calendar setCalendar() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        if(calendar.getTimeInMillis() < System.currentTimeMillis()){
+            calendar.add(Calendar.DATE, 1);
+        }
+
+        return calendar;
+    }
 
     public int getHour() {
         return hour;

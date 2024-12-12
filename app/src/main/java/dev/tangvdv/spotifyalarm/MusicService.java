@@ -233,10 +233,6 @@ public class MusicService extends Service {
     }
 
     private void setNextAlarm(){
-        Calendar calendar = AlarmModel.getInstance().getCalendar();
-        calendar.add(Calendar.DAY_OF_YEAR, 1);
-        AlarmModel.getInstance().setCalendar(calendar);
-
         Intent alarmServiceIntent = new Intent(this, AlarmManagerService.class);
         startForegroundService(alarmServiceIntent);
     }
