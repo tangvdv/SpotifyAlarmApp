@@ -7,14 +7,17 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Dialog;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -97,6 +100,8 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
         isSpotifyActivityConnected = false;
 
         try{
+            LocalBroadcastManager.getInstance(this).registerReceiver(alarmServiceReceiver, new IntentFilter("intentAlarmKey"));
+
             isAuth = AlarmSharedPreferences.isAuthSpotify(context);
 
             alarmServiceIntent = new Intent(this, AlarmManagerService.class);
@@ -106,8 +111,7 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
             alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
             // CHECK CURRENT ALARM
-            Intent intent = new Intent(context, AlarmReceiver.class);
-            alarmPendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
+            alarmPendingIntent = getAlarmPendingIntent();
             if (alarmPendingIntent != null) {
                 if(Objects.equals(alarmPendingIntent.getCreatorPackage(), context.getPackageName())){
                     AlarmModel.getInstance().setAlarmOn();
@@ -175,6 +179,19 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
         }
     }
 
+    private final BroadcastReceiver alarmServiceReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            alarmBindingState();
+        }
+    };
+
+    private PendingIntent getAlarmPendingIntent(){
+        Intent intent = new Intent(context, AlarmReceiver.class);
+        alarmPendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
+        return alarmPendingIntent;
+    }
+
     private void bindingManager(){
         binding.btnSetTime.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -193,35 +210,13 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
                     else{
                         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                             AlarmModel.getInstance().setAlarmOff();
+                            alarmPendingIntent = getAlarmPendingIntent();
                             if(alarmPendingIntent != null){
                                 alarmManager.cancel(alarmPendingIntent);
                             }
                             stopService(alarmServiceIntent);
                         }
                     }
-
-                    Thread thread = new Thread() {
-                        @Override
-                        public void run() {
-                            while(b != (AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON)) {
-
-                                try {
-                                    sleep(100);
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    alarmBindingState();
-                                }
-                            });
-
-                            saveAlarm();
-                        }
-                    };
-                    thread.start();
                 }
                 else{
                     alarmBindingState();

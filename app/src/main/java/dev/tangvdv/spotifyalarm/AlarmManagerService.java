@@ -1,7 +1,5 @@
 package dev.tangvdv.spotifyalarm;
 
-import static java.lang.Thread.sleep;
-
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -10,16 +8,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
-
-import dev.tangvdv.spotifyalarm.R;
 
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
@@ -95,14 +91,22 @@ public class AlarmManagerService extends Service {
 
         createAlarmNotification();
 
+        setResult();
+
         Log.i(TAG, AlarmModel.getInstance().getAlarmModelContent().toString() );
         LogFile logFile = new LogFile(this);
         logFile.writeToFile(TAG, AlarmModel.getInstance().getAlarmModelContent().toString());
     }
 
+    private void setResult(){
+        Intent intent = new Intent("intentAlarmKey");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
     @Override
     public void onDestroy() {
         stopForeground(STOP_FOREGROUND_REMOVE);
+        setResult();
         super.onDestroy();
     }
 }
