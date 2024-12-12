@@ -42,9 +42,6 @@ import dev.tangvdv.spotifyalarm.databinding.UserProfileDialogBinding;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 
 import java.text.SimpleDateFormat;
@@ -175,29 +172,7 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
 
     private void startAlarmService(){
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
-            if(!isAuth){
-                ConnectionParams connectionParams =
-                        new ConnectionParams.Builder(this.getString(R.string.client_id))
-                                .setRedirectUri(this.getString(R.string.redirect_uri))
-                                .showAuthView(true)
-                                .build();
-
-                SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
-                    @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                        AlarmSharedPreferences.saveAuthSpotify(context, true);
-                        startForegroundService(alarmServiceIntent);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        Log.e(TAG, throwable.getMessage(), throwable);
-                    }
-                });
-            }
-            else{
-                startForegroundService(alarmServiceIntent);
-            }
+            startForegroundService(alarmServiceIntent);
         }
     }
 
