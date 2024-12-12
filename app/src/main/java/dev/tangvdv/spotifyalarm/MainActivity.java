@@ -49,6 +49,7 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -61,7 +62,6 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
     private MaterialTimePicker timePicker;
     private Intent alarmServiceIntent;
     private boolean isSpotifyActivityConnected;
-    private boolean isAuth;
     private AlarmManager alarmManager;
     private PendingIntent alarmPendingIntent;
     private SpotifyAuthHelper spotifyAuthHelper;
@@ -101,8 +101,6 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
 
         try{
             LocalBroadcastManager.getInstance(this).registerReceiver(alarmServiceReceiver, new IntentFilter("intentAlarmKey"));
-
-            isAuth = AlarmSharedPreferences.isAuthSpotify(context);
 
             alarmServiceIntent = new Intent(this, AlarmManagerService.class);
 
@@ -183,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
         @Override
         public void onReceive(Context context, Intent intent) {
             alarmBindingState();
+            alarmTextValue();
         }
     };
 
@@ -400,17 +399,18 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
                     AlarmModel.getInstance().setAlarmOff();
                     startAlarmService();
                 }
+
+                alarmTextValue();
             }
         });
     }
 
     private void alarmTextValue(){
-        if(AlarmModel.getInstance().getCalendar() != null) {
-            String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
-            String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
-            binding.alarmTimeText.setText(String.format("%s:%s", formattedHour, formattedMinute));
-            binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(AlarmModel.getInstance().getCalendar().getTime()));
-        }
+        Date date = AlarmModel.getInstance().getCalendar().getTime();
+        String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
+        String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
+        binding.alarmTimeText.setText(String.format("%s:%s", formattedHour, formattedMinute));
+        binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(date));
     }
 
     private void alarmBindingState(){
