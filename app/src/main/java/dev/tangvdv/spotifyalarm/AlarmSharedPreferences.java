@@ -42,12 +42,7 @@ public class AlarmSharedPreferences {
     public static void clearSharedPreferences(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.remove("token");
-        editor.remove("auth");
-        editor.remove("alarm");
-        editor.remove("music");
-        editor.remove("user");
-        editor.remove("token_expiration_time");
+        editor.clear();
         editor.apply();
     }
 
@@ -58,12 +53,32 @@ public class AlarmSharedPreferences {
 
     public static void saveAuthSpotify(Context context, boolean isAuth){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        saveSharedPreferences(context, "auth", isAuth);
+        saveSharedPreferences(context, "auth_spotify", isAuth);
     }
 
     public static boolean isAuthSpotify(Context context){
         if(sharedPreferences == null) loadSharedPreferences(context);
-        return sharedPreferences.getBoolean("auth", false);
+        return sharedPreferences.getBoolean("auth_spotify", false);
+    }
+
+    public static boolean isNotificationPermissionGranted(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        return sharedPreferences.getBoolean("auth_permission_notification", false);
+    }
+
+    public static void saveNotificationPermission(Context context, boolean state) {
+        if (sharedPreferences == null) loadSharedPreferences(context);
+        saveSharedPreferences(context, "auth_permission_notification", state);
+    }
+
+    public static boolean isOverlayPermissionGranted(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        return sharedPreferences.getBoolean("auth_permission_overlay", false);
+    }
+
+    public static void saveOverlayPermission(Context context, boolean state) {
+        if (sharedPreferences == null) loadSharedPreferences(context);
+        saveSharedPreferences(context, "auth_permission_overlay", state);
     }
 
     public static void saveToken(Context context, String token){
