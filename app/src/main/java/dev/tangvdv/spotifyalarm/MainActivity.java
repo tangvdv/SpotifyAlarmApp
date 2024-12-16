@@ -5,11 +5,9 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.Dialog;
@@ -18,7 +16,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -26,6 +23,7 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -57,7 +55,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper.SpotifyAuthCallback {
+public class MainActivity extends ActivityBase implements SpotifyAuthHelper.SpotifyAuthCallback {
     private static final String TAG = "MainActivity";
 
     private Context context;
@@ -438,7 +436,7 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
             binding.alarmTimeText.setTextColor(getResources().getColor(R.color.white));
             binding.alarmTimeLeftText.setVisibility(View.VISIBLE);
-            alarmTimeLeftThread();
+            alarmTimeLeftHandler();
         }
         else{
             binding.alarmTimeText.setTextColor(getResources().getColor(R.color.light_grey));
@@ -446,43 +444,25 @@ public class MainActivity extends AppCompatActivity implements SpotifyAuthHelper
         }
     }
 
-    private void alarmTimeLeftThread(){
-        Thread timeLeftThread = new Thread() {
+    private void alarmTimeLeftHandler(){
+        Handler handler = new Handler();
+
+        handler.post(new Runnable() {
             @Override
             public void run() {
-                while(!MainActivity.this.isDestroyed() && AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
-                    try {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - AlarmModel.getInstance().getCalendar().getTimeInMillis() );
+                if(!isPaused() && AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON) {
+                    long diffInMillies = Math.abs(Calendar.getInstance().getTimeInMillis() - AlarmModel.getInstance().getCalendar().getTimeInMillis() );
 
-                                long hours = diffInMillies / (60 * 60 * 1000);
-                                long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
+                    long hours = diffInMillies / (60 * 60 * 1000);
+                    long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
 
-                                String timeLeft = String.format("%02d:%02d", hours, minutes);
-                                binding.alarmTimeLeftText.setText(context.getString(R.string.alarm_time_left) + " : " + timeLeft);
-                            }
-                        });
+                    String timeLeft = String.format("%02d:%02d", hours, minutes);
+                    binding.alarmTimeLeftText.setText(context.getString(R.string.alarm_time_left) + " : " + timeLeft);
 
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+                    handler.postDelayed(this, 1000);
                 }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
-                            alarmBindingState();
-                        }
-                    }
-                });
             }
-        };
-
-        timeLeftThread.start();
+        });
     }
 
     private void errorUserToast(String text){
