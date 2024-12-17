@@ -28,7 +28,7 @@ public class SpotifyAuthHelper {
     }
 
     public boolean isTokenValid(String token){
-        return (token != null && !token.equals("") && System.currentTimeMillis() >= AlarmSharedPreferences.loadExpirationTimeToken(context));
+        return (token != null && !token.equals("") && System.currentTimeMillis() < AlarmSharedPreferences.loadExpirationTimeToken(context));
     }
 
     public void startSpotifyActivity(Activity activity){
