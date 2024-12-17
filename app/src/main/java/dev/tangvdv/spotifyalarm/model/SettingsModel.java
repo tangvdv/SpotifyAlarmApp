@@ -9,10 +9,10 @@ public class SettingsModel {
     private boolean loopMusic;
 
     public SettingsModel(HashMap<String, Object> settings){
-        repeat = settings.containsKey("repeat") && (Boolean) settings.get("repeat");
-        shuffle = settings.containsKey("shuffle") && (Boolean) settings.get("shuffle");
+        repeat = settings.containsKey("repeat") && (Boolean) settings.get("repeat") != null ? (Boolean) settings.get("repeat") : false;
+        shuffle = settings.containsKey("shuffle") && (Boolean) settings.get("shuffle") != null ? (Boolean) settings.get("shuffle") : false;
         volume = settings.containsKey("volume") ? (Integer) settings.get("volume") : 7;
-        loopMusic = settings.containsKey("loopMusic") && (Boolean) settings.get("loopMusic");
+        loopMusic = settings.containsKey("loopMusic") && (Boolean) settings.get("loopMusic") != null ? (Boolean) settings.get("loopMusic") : false;
     }
 
     public boolean isRepeat() {
