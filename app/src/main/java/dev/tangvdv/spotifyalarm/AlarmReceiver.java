@@ -1,32 +1,43 @@
 package dev.tangvdv.spotifyalarm;
 
+import static androidx.core.content.ContextCompat.getSystemService;
+
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
-import java.util.Objects;
+import androidx.core.app.NotificationCompat;
 
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 
 public class AlarmReceiver extends BroadcastReceiver {
+    private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
+    private static final int NOTIFY_ID = 42;
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        try {
-            context.stopService(new Intent(context, AlarmManagerService.class));
+        AlarmWakeLock.acquireAlarmWakeLock(context);
 
-            AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
-            AlarmModel.getInstance().setAlarmOff();
+        NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+        notificationManager.notify(NOTIFY_ID, buildNotification(context));
 
-            AlarmWakeLock.acquireAlarmWakeLock(context);
+        AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
+        AlarmModel.getInstance().setAlarmOff();
 
-            Intent serviceIntent = new Intent(context, MusicService.class);
-            context.startForegroundService(serviceIntent);
-        } catch (Exception e) {
-            LogFile logFile = new LogFile(context);
-            logFile.writeToFile("AlarmReceiver", Objects.requireNonNull(e.getMessage()));
-            Log.e("AlarmReceiver", Objects.requireNonNull(e.getMessage()));
-        }
+        Intent serviceIntent = new Intent(context, MusicService.class);
+        context.startForegroundService(serviceIntent);
+    }
+
+    private Notification buildNotification(Context context){
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                .setSmallIcon(R.mipmap.app_logo)
+                .setPriority(NotificationManager.IMPORTANCE_HIGH)
+                .setOngoing(true)
+                .setContentTitle("Alarm is setting up");
+
+        return notificationBuilder.build();
     }
 }

@@ -26,7 +26,6 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-import java.util.Calendar;
 import java.util.Objects;
 
 public class MusicService extends Service {
@@ -47,7 +46,7 @@ public class MusicService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
-        onTaskRemoved(intent);
+        startForeground(NOTIFY_ID, buildForegroundNotification());
 
         try{
             context = this;
@@ -58,7 +57,6 @@ public class MusicService extends Service {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(serviceChannel);
 
-            startForeground(NOTIFY_ID, buildForegroundNotification());
 
             settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
 
@@ -77,14 +75,14 @@ public class MusicService extends Service {
             Log.e(TAG, Objects.requireNonNull(e.getMessage()));
         }
 
-        return START_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
     private Notification buildForegroundNotification(){
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.app_logo)
                 .setOngoing(true)
-                .setContentTitle("Music is setting up");
+                .setContentTitle("Alarm is setting up");
 
         return notificationBuilder.build();
     }

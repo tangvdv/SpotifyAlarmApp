@@ -20,9 +20,7 @@ import dev.tangvdv.spotifyalarm.model.AlarmModel;
 public class AlarmManagerService extends Service {
     private static final String TAG = "AlarmManagerService";
     private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
-    private static final int NOTIFY_ID = 51;
-    private AlarmManager alarmManager;
-    private PendingIntent pendingIntent;
+    private static final int NOTIFY_ID = 42;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -41,7 +39,7 @@ public class AlarmManagerService extends Service {
         return START_STICKY;
     }
 
-    private void createAlarmNotification(){
+    private Notification createAlarmNotification(){
         String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
         String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
 
@@ -54,9 +52,7 @@ public class AlarmManagerService extends Service {
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .setCategory(Notification.CATEGORY_ALARM);
 
-        NotificationManager notificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-
-        notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
+        return notificationBuilder.build();
     }
 
 
@@ -76,9 +72,9 @@ public class AlarmManagerService extends Service {
     }
 
     public void setAlarm(){
-        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             alarmManager.canScheduleExactAlarms();
@@ -89,7 +85,7 @@ public class AlarmManagerService extends Service {
         AlarmModel.getInstance().setAlarmOn();
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
 
-        createAlarmNotification();
+        startForeground(NOTIFY_ID, createAlarmNotification());
 
         setResult();
 
@@ -105,8 +101,6 @@ public class AlarmManagerService extends Service {
 
     @Override
     public void onDestroy() {
-        stopForeground(STOP_FOREGROUND_REMOVE);
-        setResult();
         super.onDestroy();
     }
 }
