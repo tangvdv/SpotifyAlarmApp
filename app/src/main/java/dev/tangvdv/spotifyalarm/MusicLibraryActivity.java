@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.view.View;
@@ -105,52 +106,37 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
             @Override
             public void onClick(View view) {
                 binding.errorLayout.setVisibility(View.GONE);
-                fetchedAlbum = -1;
-                fetchedPlaylist = -1;
-                fetchedArtist = -1;
                 getLibrary(token);
             }
         });
     }
 
     private void getLibrary(String token){
-        Thread thread = new Thread() {
+        Handler handler = new Handler();
+
+        getUserPlaylists(token);
+        getUserAlbums(token);
+        getUserArtists(token);
+
+        binding.progressBar.setVisibility(View.VISIBLE);
+
+        handler.post(new Runnable() {
             @Override
             public void run() {
-                getUserPlaylists(token);
-                getUserAlbums(token);
-                getUserArtists(token);
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        binding.progressBar.setVisibility(View.VISIBLE);
+                if(fetchedPlaylist == -1 || fetchedAlbum == -1 || fetchedArtist == -1){
+                    handler.postDelayed(this, 1000);
+                }
+                else{
+                    binding.progressBar.setVisibility(View.GONE);
+                    if(!errorResponse){
+                        applyFilter();
                     }
-                });
-
-                while(fetchedPlaylist==-1 || fetchedAlbum==-1 || fetchedArtist==-1) {
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+                    else {
+                        binding.errorLayout.setVisibility(View.VISIBLE);
                     }
                 }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        binding.progressBar.setVisibility(View.GONE);
-                        if(!errorResponse){
-                            applyFilter();
-                        }
-                        else {
-                            binding.errorLayout.setVisibility(View.VISIBLE);
-                        }
-                    }
-                });
             }
-        };
-        thread.start();
+        });
     }
 
     private void updateLibrary(List<MusicModel> musicModelList){
@@ -163,6 +149,7 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
     }
 
     private void getUserPlaylists(String token){
+        fetchedPlaylist = -1;
         spotifyAPI = new SpotifyAPI(this, token);
         spotifyAPI.getUserPlaylists(new SpotifyAPI.SpotifyAPICallback() {
             @Override
@@ -181,6 +168,7 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
     }
 
     private void getUserAlbums(String token){
+        fetchedAlbum = -1;
         spotifyAPI = new SpotifyAPI(this, token);
         spotifyAPI.getUserAlbums(new SpotifyAPI.SpotifyAPICallback() {
             @Override
@@ -199,6 +187,7 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
     }
 
     private void getUserArtists(String token){
+        fetchedArtist = -1;
         spotifyAPI = new SpotifyAPI(this, token);
         spotifyAPI.getUserArtists(new SpotifyAPI.SpotifyAPICallback() {
             @Override
