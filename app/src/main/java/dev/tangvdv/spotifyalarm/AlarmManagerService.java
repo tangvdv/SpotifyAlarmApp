@@ -49,13 +49,17 @@ public class AlarmManagerService extends Service {
                 .setContentTitle("Alarm is running")
                 .setContentText("Time : "+String.format("%s:%s", formattedHour, formattedMinute))
                 .setPriority(NotificationManager.IMPORTANCE_HIGH)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
-                .setCategory(Notification.CATEGORY_ALARM);
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+        Intent launchIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+        if(launchIntent != null){
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            notificationBuilder.setContentIntent(pendingIntent);
+        }
 
         return notificationBuilder.build();
     }
-
-
 
     private Notification buildForegroundNotification(){
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
