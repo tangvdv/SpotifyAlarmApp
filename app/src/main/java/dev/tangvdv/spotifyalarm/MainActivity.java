@@ -26,6 +26,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.text.SpannableString;
+import android.text.TextPaint;
+import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -381,8 +383,24 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
         HashMap<String, Object> music = AlarmSharedPreferences.loadMusic(context);
         AlarmModel.getInstance().setPlaylist_uri( (String) music.get("uri") );
         if(!music.isEmpty()){
-            binding.textPlaylistName.setText( (String) music.get("name"));
-            binding.textPlaylistOwner.setText( (String) music.get("type"));
+            binding.textPlaylistName.post(new Runnable() {
+                @Override
+                public void run() {
+                    String playlistName = ellipsize((String) music.get("name"), binding.textPlaylistName.getWidth(), binding.textPlaylistName.getTextSize());
+
+                    binding.textPlaylistName.setText(playlistName);
+                }
+            });
+
+            binding.textPlaylistOwner.post(new Runnable() {
+                @Override
+                public void run() {
+                    String playlistOwner = ellipsize((String) music.get("type"), binding.textPlaylistOwner.getWidth(), binding.textPlaylistOwner.getTextSize());
+
+                    binding.textPlaylistOwner.setText(playlistOwner);
+                }
+            });
+
             Glide.with(context)
                     .load( (String) music.get("image"))
                     .apply(new RequestOptions()
@@ -569,4 +587,14 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
             }
     );
 
+    public String ellipsize(String input, float maxWidth, float textSize) {
+        if (input == null)
+            return null;
+
+        TextPaint textPaint = new TextPaint();
+        textPaint.setTextSize(textSize);
+
+        CharSequence ellipsized = TextUtils.ellipsize(input, textPaint, maxWidth, TextUtils.TruncateAt.END);
+        return ellipsized.toString();
+    }
 }

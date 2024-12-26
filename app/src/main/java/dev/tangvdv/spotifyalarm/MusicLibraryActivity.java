@@ -8,7 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.text.TextPaint;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -174,7 +175,6 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
             }
             @Override
             public void onError(String error) {
-                Log.e(TAG, "GetUserPlaylist : " + error);
                 fetchedPlaylist = 404;
             }
         });
@@ -193,7 +193,6 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
             }
             @Override
             public void onError(String error) {
-                Log.e(TAG, "GetUserAlbums : " + error);
                 fetchedAlbum = 404;
             }
         });
@@ -212,7 +211,6 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
             }
             @Override
             public void onError(String error) {
-                Log.e(TAG, "GetUserArtists : " + error);
                 fetchedArtist = 404;
             }
         });
@@ -278,23 +276,51 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
 
         TextView tv_name = new TextView(context);
         Paris.style(tv_name).apply(R.style.library_text_item_name);
-        tv_name.setText(musicModel.getName());
+
         rl.addView(tv_name);
 
         TextView tv_type = new TextView(context);
         Paris.style(tv_type).apply(R.style.library_text_item_type);
 
-        String textType = musicModel.getType().substring(0, 1).toUpperCase() + musicModel.getType().substring(1).toLowerCase();
-        if(!Objects.equals(musicModel.getType(), "artist")){
-            textType = textType.concat(" · " + String.join(", ", musicModel.getOwnerName()));
-        }
-        tv_type.setText(textType);
-
         rl.addView(tv_type);
 
         fl.addView(rl);
 
+        tv_name.post(new Runnable() {
+            @Override
+            public void run() {
+                String musicName = ellipsize(musicModel.getName(), tv_name.getWidth()-50, tv_name.getTextSize());
+
+                tv_name.setText(musicName);
+            }
+        });
+
+        tv_type.post(new Runnable() {
+            @Override
+            public void run() {
+                String textType = musicModel.getType().substring(0, 1).toUpperCase() + musicModel.getType().substring(1).toLowerCase();
+                if(!Objects.equals(musicModel.getType(), "artist")){
+                    textType = textType.concat(" · " + String.join(", ", musicModel.getOwnerName()));
+                }
+
+                String musicType = ellipsize(textType, tv_type.getWidth(), tv_type.getTextSize());
+
+                tv_type.setText(musicType);
+            }
+        });
+
         return fl;
+    }
+
+    public String ellipsize(String input, float maxWidth, float textSize) {
+        if (input == null)
+            return null;
+
+        TextPaint textPaint = new TextPaint();
+        textPaint.setTextSize(textSize);
+
+        CharSequence ellipsized = TextUtils.ellipsize(input, textPaint, maxWidth, TextUtils.TruncateAt.END);
+        return ellipsized.toString();
     }
 
     private void onClickLibraryButton(MusicModel musicModel){
