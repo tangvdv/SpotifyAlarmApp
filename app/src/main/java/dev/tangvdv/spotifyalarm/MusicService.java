@@ -1,5 +1,6 @@
 package dev.tangvdv.spotifyalarm;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -13,6 +14,7 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -44,13 +46,22 @@ public class MusicService extends Service {
 
     private AlarmState alarmState;
 
+    private final IBinder binder = new LocalBinder();
+
+    private MusicServiceCallback callback;
+
+
+    public interface MusicServiceCallback{
+        void onCompletion();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         startForeground(NOTIFY_ID, buildForegroundNotification());
 
-        try{
-            context = this;
+        context = this;
 
+        try{
             alarmState = new AlarmState();
 
             NotificationChannel serviceChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "Notification SpotifyAlarm",NotificationManager.IMPORTANCE_HIGH);
@@ -176,8 +187,10 @@ public class MusicService extends Service {
             @Override
             public void onCompletion(boolean isPlaying) {
                 if(!isPlaying){
-                    if(AlarmLockScreenActivity.lockScreenActivity != null) {
-                        AlarmLockScreenActivity.lockScreenActivity.finish();
+                    AlarmLockScreenActivity alarmLockScreenActivity = new AlarmLockScreenActivity();
+                    Activity activity = alarmLockScreenActivity.getLockScreenActivity();
+                    if(activity != null) {
+                        activity.finish();
                     }
                     else{
                         Intent intent = new Intent(getApplicationContext(), NotificationShutAlarmOffReceiver.class);
@@ -193,12 +206,9 @@ public class MusicService extends Service {
         stopForeground(STOP_FOREGROUND_REMOVE);
 
         try{
-            Intent lockScreen = new Intent(context, AlarmLockScreenActivity.class);
-            lockScreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(lockScreen);
-
             createMusicNotification();
             shutAlarmOffHandler();
+            callback.onCompletion();
         }
         catch (IllegalStateException illegalStateException){
             logFile.writeToFile(TAG, Objects.requireNonNull(illegalStateException.getMessage()));
@@ -249,6 +259,16 @@ public class MusicService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
+    }
+
+    public void setCallback(MusicServiceCallback callback) {
+        this.callback = callback;
+    }
+
+    public class LocalBinder extends Binder {
+        public MusicService getService() {
+            return MusicService.this;
+        }
     }
 }

@@ -1,14 +1,18 @@
 package dev.tangvdv.spotifyalarm;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.app.Activity;
-import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.ContextThemeWrapper;
+import android.os.IBinder;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -19,8 +23,10 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-public class AlarmLockScreenActivity extends AppCompatActivity {
-    private static final String TAG = "TestScreenOnActivity";
+import java.util.Objects;
+
+public class AlarmLockScreenActivity extends AppCompatActivity implements MusicService.MusicServiceCallback {
+    private static final String TAG = "LockScreenActivity";
     private Handler handler;
 
     private TextView currentTimeTextView;
@@ -30,15 +36,37 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
     private View overlayView;
     private WindowManager.LayoutParams params;
 
-    public static Activity lockScreenActivity;
+    private MusicService musicService;
+    private boolean isBound = false;
+    private boolean isCompleted = false;
+
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
+            musicService = binder.getService();
+            isBound = true;
+            musicService.setCallback(AlarmLockScreenActivity.this);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isBound = false;
+            musicService = null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        lockScreenActivity = this;
-
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        Intent serviceIntent = new Intent(this, MusicService.class);
+        serviceIntent.addFlags(Intent.FLAG_FROM_BACKGROUND);
+
+        ContextCompat.startForegroundService(this, serviceIntent);
+        bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -58,19 +86,31 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
 
         currentTimeTextView = overlayView.findViewById(R.id.currentTime);
         currentDateTextView = overlayView.findViewById(R.id.currentDate);
-        Button turnOffBtn = overlayView.findViewById(R.id.turnOffBtn);
 
         windowManager.addView(overlayView, params);
 
         handler = new Handler();
 
         updateDateTime();
+
+        Button turnOffBtn = overlayView.findViewById(R.id.turnOffBtn);
         turnOffBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                if(isCompleted){
+                    finish();
+                }
             }
         });
+    }
+
+    public Activity getLockScreenActivity() {
+        return this;
+    }
+
+    @Override
+    public void onCompletion() {
+        isCompleted = true;
     }
 
     private void updateDateTime() {
@@ -93,13 +133,23 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
         }, 0);
     }
 
+    private void removeAlarm(){
+        if(isCompleted) {
+            windowManager.removeView(overlayView);
+            handler.removeCallbacksAndMessages(null);
+            Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
+            sendBroadcast(intent);
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        windowManager.removeView(overlayView);
-        handler.removeCallbacksAndMessages(null);
-        Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
-        sendBroadcast(intent);
+        if (isBound) {
+            unbindService(connection);
+            isBound = false;
+        }
+        removeAlarm();
     }
 
     @Override

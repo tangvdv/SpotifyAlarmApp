@@ -27,8 +27,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         AlarmModel.getInstance().setAlarmModel(AlarmSharedPreferences.loadAlarm(context));
         AlarmModel.getInstance().setAlarmOff();
 
-        Intent serviceIntent = new Intent(context, MusicService.class);
-        context.startForegroundService(serviceIntent);
+        Intent lockScreen = new Intent(context, AlarmLockScreenActivity.class);
+        lockScreen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(lockScreen);
     }
 
     private Notification buildNotification(Context context){
