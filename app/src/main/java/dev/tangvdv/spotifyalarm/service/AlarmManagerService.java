@@ -16,8 +16,7 @@ public class AlarmManagerService extends Service {
 
 
         if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.OFF){
-            AlarmHelper alarmHelper = new AlarmHelper(this);
-            alarmHelper.setAlarm();
+            AlarmHelper.getInstance(this).setAlarm();
         }
 
         return super.onStartCommand(intent, flags, startId);

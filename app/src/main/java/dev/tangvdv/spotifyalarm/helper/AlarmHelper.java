@@ -114,8 +114,12 @@ public class AlarmHelper {
     public void alarmCurrentStateHandler(){
         PendingIntent pendingIntent = getAlarmPendingIntent();
         if (pendingIntent != null) {
-            if(Objects.equals(pendingIntent.getCreatorPackage(), context.getPackageName())){
-                AlarmModel.getInstance().setAlarmOn();
+            if(Objects.equals(pendingIntent.getCreatorPackage(), context.getPackageName()) && AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
+                setAlarm();
+            }
+            else{
+                pendingIntent.cancel();
+                AlarmModel.getInstance().setAlarmOff();
             }
         } else {
             AlarmModel.getInstance().setAlarmOff();

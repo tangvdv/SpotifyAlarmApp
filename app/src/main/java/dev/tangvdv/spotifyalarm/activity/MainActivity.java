@@ -65,7 +65,6 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
     private boolean isSpotifyActivityConnected;
     private AlarmManager alarmManager;
     private SpotifyAuthHelper spotifyAuthHelper;
-    private AlarmHelper alarmHelper;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -112,8 +111,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
             alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
             // CHECK CURRENT ALARM
-            alarmHelper = new AlarmHelper(context);
-            alarmHelper.alarmCurrentStateHandler();
+            AlarmHelper.getInstance(context).alarmCurrentStateHandler();
 
             if (isNetworkConnected()){
                 binding.mainLayout.setVisibility(View.GONE);
@@ -206,7 +204,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
                             else{
                                 if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                                     AlarmModel.getInstance().setAlarmOff();
-                                    PendingIntent alarmPendingIntent = alarmHelper.getAlarmPendingIntent();
+                                    PendingIntent alarmPendingIntent = AlarmHelper.getInstance(context).getAlarmPendingIntent();
                                     if(alarmPendingIntent != null){
                                         alarmManager.cancel(alarmPendingIntent);
                                     }
