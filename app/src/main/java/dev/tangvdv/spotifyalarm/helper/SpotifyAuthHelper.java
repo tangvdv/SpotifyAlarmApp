@@ -12,9 +12,7 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 import dev.tangvdv.spotifyalarm.R;
 
 public class SpotifyAuthHelper {
-
     private final String TAG = "SpotifyActivity";
-
     private final Context context;
     private final SpotifyAuthCallback callback;
     private String token;

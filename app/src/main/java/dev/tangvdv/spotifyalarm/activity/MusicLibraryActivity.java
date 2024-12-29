@@ -1,16 +1,12 @@
 package dev.tangvdv.spotifyalarm.activity;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.TextPaint;
-import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -36,10 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAuthHelper.SpotifyAuthCallback {
-    private static final String TAG = "MusicLibraryActivity";
+public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHelper.SpotifyAuthCallback {
     private Context context;
-
     private ActivityLibraryBinding binding;
     private List<String> filterTypes;
     private List<MusicModel> musicModelList;
@@ -71,7 +65,8 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
 
     @Override
     public void onSpotifyConnected(String token) {
-        getLibrary(token);
+        this.token = token;
+        getLibrary();
         bindingManager();
     }
 
@@ -111,17 +106,17 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
             @Override
             public void onClick(View view) {
                 binding.errorLayout.setVisibility(View.GONE);
-                getLibrary(token);
+                getLibrary();
             }
         });
     }
 
-    private void getLibrary(String token){
+    private void getLibrary(){
         Handler handler = new Handler();
 
-        getUserPlaylists(token);
-        getUserAlbums(token);
-        getUserArtists(token);
+        getUserPlaylists();
+        getUserAlbums();
+        getUserArtists();
 
         binding.progressBar.setVisibility(View.VISIBLE);
 
@@ -153,7 +148,7 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
         }
     }
 
-    private void getUserPlaylists(String token){
+    private void getUserPlaylists(){
         fetchedPlaylist = -1;
         spotifyAPI = new SpotifyAPI(this, token);
         spotifyAPI.getUserPlaylists(new SpotifyAPI.SpotifyAPICallback() {
@@ -172,7 +167,7 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
         });
     }
 
-    private void getUserAlbums(String token){
+    private void getUserAlbums(){
         fetchedAlbum = -1;
         spotifyAPI = new SpotifyAPI(this, token);
         spotifyAPI.getUserAlbums(new SpotifyAPI.SpotifyAPICallback() {
@@ -191,7 +186,7 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
         });
     }
 
-    private void getUserArtists(String token){
+    private void getUserArtists(){
         fetchedArtist = -1;
         spotifyAPI = new SpotifyAPI(this, token);
         spotifyAPI.getUserArtists(new SpotifyAPI.SpotifyAPICallback() {
@@ -306,17 +301,6 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
         return fl;
     }
 
-    public String ellipsize(String input, float maxWidth, float textSize) {
-        if (input == null)
-            return null;
-
-        TextPaint textPaint = new TextPaint();
-        textPaint.setTextSize(textSize);
-
-        CharSequence ellipsized = TextUtils.ellipsize(input, textPaint, maxWidth, TextUtils.TruncateAt.END);
-        return ellipsized.toString();
-    }
-
     private void onClickLibraryButton(MusicModel musicModel){
         AlarmSharedPreferences.saveMusic(context, musicModel.getMusicModelContent());
         setResultActivity(Activity.RESULT_OK, "");
@@ -328,11 +312,5 @@ public class MusicLibraryActivity extends AppCompatActivity implements SpotifyAu
         setResult(type, resultIntent);
 
         finish();
-    }
-
-    private boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }

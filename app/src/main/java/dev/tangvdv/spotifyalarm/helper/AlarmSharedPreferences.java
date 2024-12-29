@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class AlarmSharedPreferences {
-    private static final String TAG = "AlarmSharedPreferences";
     private static SharedPreferences sharedPreferences;
 
     private static void loadSharedPreferences(Context context){

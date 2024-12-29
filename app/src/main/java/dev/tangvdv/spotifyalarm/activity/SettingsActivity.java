@@ -16,7 +16,6 @@ import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import dev.tangvdv.spotifyalarm.model.SettingsModel;
 
 public class SettingsActivity extends AppCompatActivity {
-    private static final String TAG = "SettingsActivity";
     private Context context;
     private SettingsActivityBinding binding;
     private SettingsModel settingsModel;

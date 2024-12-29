@@ -1,8 +1,5 @@
 package dev.tangvdv.spotifyalarm.service;
 
-import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -19,20 +16,16 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.core.app.NotificationCompat;
-
-import dev.tangvdv.spotifyalarm.activity.AlarmLockScreenActivity;
 import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
-import dev.tangvdv.spotifyalarm.helper.AlarmStateHelper;
+import dev.tangvdv.spotifyalarm.helper.AlarmHelper;
 import dev.tangvdv.spotifyalarm.helper.AlarmWakeLock;
 import dev.tangvdv.spotifyalarm.helper.LogFile;
+import dev.tangvdv.spotifyalarm.helper.NotificationHelper;
+import dev.tangvdv.spotifyalarm.helper.SpotifyRemoteHelper;
 import dev.tangvdv.spotifyalarm.receiver.NotificationShutAlarmOffReceiver;
-import dev.tangvdv.spotifyalarm.R;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import dev.tangvdv.spotifyalarm.model.SettingsModel;
 
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
@@ -40,49 +33,49 @@ import java.util.Objects;
 
 public class MusicService extends Service {
     private static final String TAG = "MusicService";
-    private static final String NOTIFICATION_CHANNEL_ID = "notification.spotifyalarm";
-    private static final int NOTIFY_ID = 42;
-    private SpotifyAppRemote mySpotifyAppRemote;
-
+    private SpotifyAppRemote mSpotifyAppRemote;
     private LogFile logFile;
-
     private boolean isAlarmRinging;
-
     private SettingsModel settingsModel;
-
     private Context context;
-
-    private AlarmStateHelper alarmState;
-
     private final IBinder binder = new LocalBinder();
-
     private MusicServiceCallback callback;
-
-
     public interface MusicServiceCallback{
         void onCompletion();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
-        startForeground(NOTIFY_ID, buildForegroundNotification());
-
         context = this;
 
+        startForeground(42, NotificationHelper.getForegroundNotification(context, "Alarm is setting up"));
+
         try{
-            alarmState = new AlarmStateHelper();
-
-            NotificationChannel serviceChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "Notification SpotifyAlarm",NotificationManager.IMPORTANCE_HIGH);
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(serviceChannel);
-
-
             settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
 
             logFile = new LogFile(this);
             isAlarmRinging = false;
             if(isNetworkConnected()){
-                setSpotifyAppRemote();
+                SpotifyRemoteHelper.spotifyAppRemoteConnection(context, new SpotifyRemoteHelper.SpotifyRemoteCallback() {
+                    @Override
+                    public void onRemoteConnected(SpotifyAppRemote spotifyAppRemote) {
+                        if (!isAlarmRinging) {
+                            logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
+                            mSpotifyAppRemote = spotifyAppRemote;
+                            AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
+                            playSpotifyAlarm();
+                        }
+                    }
+
+                    @Override
+                    public void onRemoteConnectionError(Throwable throwable) {
+                        if (!isAlarmRinging) {
+                            logFile.writeToFile(TAG, throwable.getMessage());
+                            Log.e(TAG, throwable.getMessage(), throwable);
+                            playBackupAlarm();
+                        }
+                    }
+                });
             }
             else{
                 playBackupAlarm();
@@ -97,55 +90,19 @@ public class MusicService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private Notification buildForegroundNotification(){
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setSmallIcon(R.mipmap.app_logo)
-                .setOngoing(true)
-                .setContentTitle("Alarm is setting up");
-
-        return notificationBuilder.build();
-    }
-
-    private void setSpotifyAppRemote() {
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(this.getString(R.string.client_id))
-                        .setRedirectUri(this.getString(R.string.redirect_uri))
-                        .build();
-        SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
-            @Override
-            public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                if (!isAlarmRinging) {
-                    logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
-                    mySpotifyAppRemote = spotifyAppRemote;
-                    AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
-                    playSpotifyAlarm();
-                }
-            }
-
-            @Override
-            public void onFailure(Throwable throwable) {
-                if (!isAlarmRinging) {
-                    logFile.writeToFile(TAG, throwable.getMessage());
-                    Log.e(TAG, throwable.getMessage(), throwable);
-                    playBackupAlarm();
-                }
-            }
-        });
-    }
-
     private void playSpotifyAlarm() {
         String uri = AlarmModel.getInstance().getPlaylist_uri();
         if (!uri.equals("")) {
             // APPLY SETTINGS
             AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
-            mySpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
-            mySpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
-            mySpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
+            mSpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
+            mSpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
+            mSpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
 
             AlarmModel.getInstance().setAlarmSpotifyType();
 
-            alarmState.getAlarmState(AlarmStateHelper.State.PLAY, new AlarmStateHelper.AlarmStateCallback() {
+            AlarmHelper.getInstance(context).getAlarmState(AlarmHelper.State.PLAY, new AlarmHelper.AlarmStateCallback() {
                 @Override
                 public void onCompletion(boolean isPlaying) {
                     if(isPlaying){
@@ -178,7 +135,7 @@ public class MusicService extends Service {
         defaultRingtone.play();
         AlarmModel.getInstance().setBackupAlarmRingtone(defaultRingtone);
         AlarmModel.getInstance().setAlarmBackupType();
-        alarmState.getAlarmState(AlarmStateHelper.State.PLAY, new AlarmStateHelper.AlarmStateCallback() {
+        AlarmHelper.getInstance(context).getAlarmState(AlarmHelper.State.PLAY, new AlarmHelper.AlarmStateCallback() {
             @Override
             public void onCompletion(boolean isPlaying) {
                 if(isPlaying){
@@ -190,32 +147,16 @@ public class MusicService extends Service {
         });
     }
 
-    private void shutAlarmOffHandler(){
-        alarmState.getAlarmState(AlarmStateHelper.State.PAUSE, new AlarmStateHelper.AlarmStateCallback() {
-            @Override
-            public void onCompletion(boolean isPlaying) {
-                if(!isPlaying){
-                    AlarmLockScreenActivity alarmLockScreenActivity = new AlarmLockScreenActivity();
-                    Activity activity = alarmLockScreenActivity.getLockScreenActivity();
-                    if(activity != null) {
-                        activity.finish();
-                    }
-                    else{
-                        Intent intent = new Intent(getApplicationContext(), NotificationShutAlarmOffReceiver.class);
-                        sendBroadcast(intent);
-                    }
-                }
-            }
-        });
-    }
-
     private void alarmEnding(){
         isAlarmRinging = true;
-        stopForeground(STOP_FOREGROUND_REMOVE);
+        AlarmHelper.getInstance(context).shutAlarmOffHandler();
 
         try{
-            createMusicNotification();
-            shutAlarmOffHandler();
+            Intent intent = new Intent(context, NotificationShutAlarmOffReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+            NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
+            notificationManager.notify(42,NotificationHelper.getNotification(context, "Alarm is ringing !","Click to shut alarm off", pendingIntent));
+
             callback.onCompletion();
         }
         catch (IllegalStateException illegalStateException){
@@ -223,34 +164,8 @@ public class MusicService extends Service {
             Log.e(TAG, Objects.requireNonNull(illegalStateException.getMessage()));
         }
 
-        if(settingsModel.isRepeat()) setNextAlarm();
+        if(settingsModel.isRepeat()) AlarmHelper.getInstance(context).setAlarm();
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
-    }
-
-    private void createMusicNotification(){
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if(notificationManager != null){
-            Intent intent = new Intent(context, NotificationShutAlarmOffReceiver.class);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-
-            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                    .setSmallIcon(R.mipmap.app_logo)
-                    .setOngoing(true)
-                    .setContentTitle("Alarm is ringing ! Click to shut alarm off")
-                    .setPriority(NotificationManager.IMPORTANCE_HIGH)
-                    .setContentIntent(pendingIntent)
-                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                    .addAction(R.mipmap.app_logo, "Stop", pendingIntent);
-
-
-            notificationManager.notify(NOTIFY_ID, notificationBuilder.build());
-        }
-    }
-
-    private void setNextAlarm(){
-        Intent alarmServiceIntent = new Intent(this, AlarmManagerService.class);
-        startForegroundService(alarmServiceIntent);
     }
 
     private boolean isNetworkConnected() {

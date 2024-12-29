@@ -5,7 +5,6 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.app.Activity;
@@ -16,18 +15,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.net.ConnectivityManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.Settings;
 import android.text.SpannableString;
-import android.text.TextPaint;
-import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,7 +34,7 @@ import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 
-import dev.tangvdv.spotifyalarm.receiver.AlarmReceiver;
+import dev.tangvdv.spotifyalarm.helper.AlarmHelper;
 import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
 import dev.tangvdv.spotifyalarm.helper.LogFile;
 import dev.tangvdv.spotifyalarm.R;
@@ -55,9 +47,6 @@ import dev.tangvdv.spotifyalarm.service.AlarmManagerService;
 
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 
 import java.text.SimpleDateFormat;
@@ -68,7 +57,6 @@ import java.util.Objects;
 
 public class MainActivity extends ActivityBase implements SpotifyAuthHelper.SpotifyAuthCallback {
     private static final String TAG = "MainActivity";
-
     private Context context;
     private ActivityMainBinding binding;
     private Dialog userProfileDialog;
@@ -76,11 +64,8 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
     private Intent alarmServiceIntent;
     private boolean isSpotifyActivityConnected;
     private AlarmManager alarmManager;
-    private PendingIntent alarmPendingIntent;
     private SpotifyAuthHelper spotifyAuthHelper;
-    private interface PermissionResultCallback {
-        void onResult(boolean hasAllPermissions);
-    }
+    private AlarmHelper alarmHelper;
 
     private final ActivityResultLauncher<Intent> musicActivityResult = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -127,16 +112,8 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
             alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
             // CHECK CURRENT ALARM
-            alarmPendingIntent = getAlarmPendingIntent();
-            if (alarmPendingIntent != null) {
-                if(Objects.equals(alarmPendingIntent.getCreatorPackage(), context.getPackageName())){
-                    AlarmModel.getInstance().setAlarmOn();
-                    Log.v(TAG, "An alarm is active. ");
-                }
-            } else {
-                AlarmModel.getInstance().setAlarmOff();
-                Log.e(TAG, "No active alarm found.");
-            }
+            alarmHelper = new AlarmHelper(context);
+            alarmHelper.alarmCurrentStateHandler();
 
             if (isNetworkConnected()){
                 binding.mainLayout.setVisibility(View.GONE);
@@ -208,12 +185,6 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
         }
     };
 
-    private PendingIntent getAlarmPendingIntent(){
-        Intent intent = new Intent(context, AlarmReceiver.class);
-        alarmPendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_NO_CREATE | PendingIntent.FLAG_IMMUTABLE);
-        return alarmPendingIntent;
-    }
-
     private void bindingManager(){
         binding.btnSetTime.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -235,7 +206,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
                             else{
                                 if(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON){
                                     AlarmModel.getInstance().setAlarmOff();
-                                    alarmPendingIntent = getAlarmPendingIntent();
+                                    PendingIntent alarmPendingIntent = alarmHelper.getAlarmPendingIntent();
                                     if(alarmPendingIntent != null){
                                         alarmManager.cancel(alarmPendingIntent);
                                     }
@@ -505,105 +476,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
         super.onDestroy();
     }
 
-    private boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
-    }
-
     private void saveAlarm(){
         AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
-    }
-
-    private void firstPermissionAndAuth(PermissionResultCallback callback){
-        boolean hasAllPermissions = true;
-        if(!AlarmSharedPreferences.isOverlayPermissionGranted(context)){
-            requestOverlayPermission();
-            hasAllPermissions = false;
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if(!AlarmSharedPreferences.isNotificationPermissionGranted(context)){
-                requestNotificationPermission();
-                hasAllPermissions = false;
-            }
-        }
-
-        if(!AlarmSharedPreferences.isAuthSpotify(context)){
-            spotifyAppRemoteConnection();
-            hasAllPermissions = false;
-        }
-
-        callback.onResult(hasAllPermissions);
-    }
-
-    private void spotifyAppRemoteConnection(){
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(this.getString(R.string.client_id))
-                        .setRedirectUri(this.getString(R.string.redirect_uri))
-                        .showAuthView(true)
-                        .build();
-
-        SpotifyAppRemote.connect(this, connectionParams, new Connector.ConnectionListener() {
-            @Override
-            public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                AlarmSharedPreferences.saveAuthSpotify(context, true);
-            }
-
-            @Override
-            public void onFailure(Throwable throwable) {
-                Log.e(TAG, throwable.getMessage(), throwable);
-            }
-        });
-    }
-
-    private void requestNotificationPermission() {
-       if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
-            requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS);
-        }
-        else if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED){
-            AlarmSharedPreferences.saveNotificationPermission(context, true);
-        }
-    }
-
-    private void requestOverlayPermission() {
-        if (!Settings.canDrawOverlays(context)) {
-            Intent overlayIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
-            overlayPermissionLauncher.launch(overlayIntent);
-        }
-        else{
-            AlarmSharedPreferences.saveOverlayPermission(context, true);
-        }
-    }
-
-    private final ActivityResultLauncher<Intent> overlayPermissionLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (Settings.canDrawOverlays(context)) {
-                    AlarmSharedPreferences.saveOverlayPermission(context, true);
-                } else {
-                    AlarmSharedPreferences.saveOverlayPermission(context, false);
-                }
-            }
-    );
-
-    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
-            new ActivityResultContracts.RequestPermission(),
-            isGranted -> {
-                if (!isGranted) {
-                    AlarmSharedPreferences.saveNotificationPermission(context, isGranted);
-                }
-            }
-    );
-
-    public String ellipsize(String input, float maxWidth, float textSize) {
-        if (input == null)
-            return null;
-
-        TextPaint textPaint = new TextPaint();
-        textPaint.setTextSize(textSize);
-
-        CharSequence ellipsized = TextUtils.ellipsize(input, textPaint, maxWidth, TextUtils.TruncateAt.END);
-        return ellipsized.toString();
     }
 }

@@ -23,21 +23,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import dev.tangvdv.spotifyalarm.receiver.NotificationShutAlarmOffReceiver;
+import dev.tangvdv.spotifyalarm.helper.AlarmHelper;
 import dev.tangvdv.spotifyalarm.R;
 import dev.tangvdv.spotifyalarm.service.MusicService;
 
 public class AlarmLockScreenActivity extends AppCompatActivity implements MusicService.MusicServiceCallback {
-    private static final String TAG = "LockScreenActivity";
     private Handler handler;
-
     private TextView currentTimeTextView;
     private TextView currentDateTextView;
-
     private WindowManager windowManager;
     private View overlayView;
     private WindowManager.LayoutParams params;
-
     private MusicService musicService;
     private boolean isBound = false;
     private boolean isCompleted = false;
@@ -61,6 +57,8 @@ public class AlarmLockScreenActivity extends AppCompatActivity implements MusicS
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        AlarmHelper.getInstance(this).setLockScreenActivity(this);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
@@ -139,8 +137,7 @@ public class AlarmLockScreenActivity extends AppCompatActivity implements MusicS
         if(isCompleted) {
             windowManager.removeView(overlayView);
             handler.removeCallbacksAndMessages(null);
-            Intent intent = new Intent(this, NotificationShutAlarmOffReceiver.class);
-            sendBroadcast(intent);
+            AlarmHelper.getInstance(this).shutAlarmOff();
         }
     }
 
