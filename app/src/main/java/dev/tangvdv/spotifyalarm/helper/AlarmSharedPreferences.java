@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.helper;
 
 import android.content.Context;
 import android.content.SharedPreferences;

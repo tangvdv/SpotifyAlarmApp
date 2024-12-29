@@ -1,9 +1,6 @@
-package dev.tangvdv.spotifyalarm;
-
-import static androidx.core.content.ContextCompat.getSystemService;
+package dev.tangvdv.spotifyalarm.receiver;
 
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,6 +8,10 @@ import android.content.Intent;
 
 import androidx.core.app.NotificationCompat;
 
+import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
+import dev.tangvdv.spotifyalarm.helper.AlarmWakeLock;
+import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.activity.AlarmLockScreenActivity;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 
 public class AlarmReceiver extends BroadcastReceiver {

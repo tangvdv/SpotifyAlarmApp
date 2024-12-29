@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.helper;
 
 import android.os.Handler;
 import android.util.Log;
@@ -8,7 +8,7 @@ import com.spotify.protocol.types.PlayerState;
 
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 
-public class AlarmState {
+public class AlarmStateHelper {
     public interface AlarmStateCallback{
         void onCompletion(boolean isPlaying);
     }
@@ -20,7 +20,7 @@ public class AlarmState {
 
     private Handler handler;
 
-    public void getAlarmState(State state, dev.tangvdv.spotifyalarm.AlarmState.AlarmStateCallback callback){
+    public void getAlarmState(State state, AlarmStateHelper.AlarmStateCallback callback){
         if(AlarmModel.getInstance().getCurrentType() != null){
             handler = new Handler();
             handler.postDelayed(new Runnable() {

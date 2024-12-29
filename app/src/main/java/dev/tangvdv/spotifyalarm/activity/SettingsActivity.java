@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.activity;
 
 import android.content.Context;
 import android.media.AudioManager;
@@ -9,6 +9,8 @@ import android.widget.SeekBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
+import dev.tangvdv.spotifyalarm.R;
 import dev.tangvdv.spotifyalarm.databinding.SettingsActivityBinding;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import dev.tangvdv.spotifyalarm.model.SettingsModel;

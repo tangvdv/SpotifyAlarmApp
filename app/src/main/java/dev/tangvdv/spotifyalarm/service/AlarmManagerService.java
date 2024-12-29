@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.service;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -15,6 +15,10 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import dev.tangvdv.spotifyalarm.receiver.AlarmReceiver;
+import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
+import dev.tangvdv.spotifyalarm.helper.LogFile;
+import dev.tangvdv.spotifyalarm.R;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 
 public class AlarmManagerService extends Service {

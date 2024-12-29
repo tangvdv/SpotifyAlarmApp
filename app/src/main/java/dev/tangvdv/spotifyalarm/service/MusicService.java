@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.service;
 
 import android.app.Activity;
 import android.app.Notification;
@@ -21,8 +21,16 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import dev.tangvdv.spotifyalarm.activity.AlarmLockScreenActivity;
+import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
+import dev.tangvdv.spotifyalarm.helper.AlarmStateHelper;
+import dev.tangvdv.spotifyalarm.helper.AlarmWakeLock;
+import dev.tangvdv.spotifyalarm.helper.LogFile;
+import dev.tangvdv.spotifyalarm.receiver.NotificationShutAlarmOffReceiver;
+import dev.tangvdv.spotifyalarm.R;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import dev.tangvdv.spotifyalarm.model.SettingsModel;
+
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.PlayerApi;
@@ -44,7 +52,7 @@ public class MusicService extends Service {
 
     private Context context;
 
-    private AlarmState alarmState;
+    private AlarmStateHelper alarmState;
 
     private final IBinder binder = new LocalBinder();
 
@@ -62,7 +70,7 @@ public class MusicService extends Service {
         context = this;
 
         try{
-            alarmState = new AlarmState();
+            alarmState = new AlarmStateHelper();
 
             NotificationChannel serviceChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "Notification SpotifyAlarm",NotificationManager.IMPORTANCE_HIGH);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
@@ -137,7 +145,7 @@ public class MusicService extends Service {
 
             AlarmModel.getInstance().setAlarmSpotifyType();
 
-            alarmState.getAlarmState(AlarmState.State.PLAY, new AlarmState.AlarmStateCallback() {
+            alarmState.getAlarmState(AlarmStateHelper.State.PLAY, new AlarmStateHelper.AlarmStateCallback() {
                 @Override
                 public void onCompletion(boolean isPlaying) {
                     if(isPlaying){
@@ -170,7 +178,7 @@ public class MusicService extends Service {
         defaultRingtone.play();
         AlarmModel.getInstance().setBackupAlarmRingtone(defaultRingtone);
         AlarmModel.getInstance().setAlarmBackupType();
-        alarmState.getAlarmState(AlarmState.State.PLAY, new AlarmState.AlarmStateCallback() {
+        alarmState.getAlarmState(AlarmStateHelper.State.PLAY, new AlarmStateHelper.AlarmStateCallback() {
             @Override
             public void onCompletion(boolean isPlaying) {
                 if(isPlaying){
@@ -183,7 +191,7 @@ public class MusicService extends Service {
     }
 
     private void shutAlarmOffHandler(){
-        alarmState.getAlarmState(AlarmState.State.PAUSE, new AlarmState.AlarmStateCallback() {
+        alarmState.getAlarmState(AlarmStateHelper.State.PAUSE, new AlarmStateHelper.AlarmStateCallback() {
             @Override
             public void onCompletion(boolean isPlaying) {
                 if(!isPlaying){

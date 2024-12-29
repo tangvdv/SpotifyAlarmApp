@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 

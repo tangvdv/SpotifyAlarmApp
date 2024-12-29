@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -12,7 +12,6 @@ import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -23,7 +22,10 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Objects;
+
+import dev.tangvdv.spotifyalarm.receiver.NotificationShutAlarmOffReceiver;
+import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.service.MusicService;
 
 public class AlarmLockScreenActivity extends AppCompatActivity implements MusicService.MusicServiceCallback {
     private static final String TAG = "LockScreenActivity";

@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.activity;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -41,9 +41,18 @@ import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
+
+import dev.tangvdv.spotifyalarm.receiver.AlarmReceiver;
+import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
+import dev.tangvdv.spotifyalarm.helper.LogFile;
+import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.helper.SpotifyAPI;
+import dev.tangvdv.spotifyalarm.helper.SpotifyAuthHelper;
 import dev.tangvdv.spotifyalarm.databinding.ActivityMainBinding;
 import dev.tangvdv.spotifyalarm.databinding.UserProfileDialogBinding;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
+import dev.tangvdv.spotifyalarm.service.AlarmManagerService;
+
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.spotify.android.appremote.api.ConnectionParams;

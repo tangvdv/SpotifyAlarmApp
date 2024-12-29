@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.activity;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +24,11 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
+
+import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
+import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.helper.SpotifyAPI;
+import dev.tangvdv.spotifyalarm.helper.SpotifyAuthHelper;
 import dev.tangvdv.spotifyalarm.databinding.ActivityLibraryBinding;
 import dev.tangvdv.spotifyalarm.model.MusicModel;
 

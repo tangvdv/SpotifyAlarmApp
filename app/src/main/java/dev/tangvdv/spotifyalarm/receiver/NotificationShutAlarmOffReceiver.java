@@ -1,15 +1,10 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.receiver;
 
-import static androidx.core.app.ServiceCompat.stopForeground;
-
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 

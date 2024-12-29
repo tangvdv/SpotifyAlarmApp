@@ -1,8 +1,10 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.helper;
 
 import android.content.Context;
 import android.os.PowerManager;
 import android.util.Log;
+
+import dev.tangvdv.spotifyalarm.helper.LogFile;
 
 public class AlarmWakeLock {
     private static final String TAG = "AlarmWakeLock";

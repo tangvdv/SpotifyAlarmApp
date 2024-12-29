@@ -1,4 +1,4 @@
-package dev.tangvdv.spotifyalarm;
+package dev.tangvdv.spotifyalarm.helper;
 
 import android.app.Activity;
 import android.content.Context;
@@ -8,6 +8,8 @@ import android.util.Log;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
+
+import dev.tangvdv.spotifyalarm.R;
 
 public class SpotifyAuthHelper {
 
