@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
+import dev.tangvdv.spotifyalarm.R;
 import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
 import dev.tangvdv.spotifyalarm.helper.AlarmHelper;
 import dev.tangvdv.spotifyalarm.helper.AlarmWakeLock;
@@ -48,7 +49,7 @@ public class MusicService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId){
         context = this;
 
-        startForeground(42, NotificationHelper.getForegroundNotification(context, "Alarm is setting up"));
+        startForeground(R.integer.notification_id, NotificationHelper.getForegroundNotification(context, "Alarm is setting up"));
 
         try{
             settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
@@ -150,12 +151,13 @@ public class MusicService extends Service {
     private void alarmEnding(){
         isAlarmRinging = true;
         AlarmHelper.getInstance(context).shutAlarmOffHandler();
+        stopForeground(STOP_FOREGROUND_DETACH);
 
         try{
             Intent intent = new Intent(context, NotificationShutAlarmOffReceiver.class);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
             NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
-            notificationManager.notify(42,NotificationHelper.getNotification(context, "Alarm is ringing !","Click to shut alarm off", pendingIntent));
+            notificationManager.notify(R.integer.notification_id,NotificationHelper.getNotification(context, "Alarm is ringing !","Click to shut alarm off", pendingIntent));
 
             callback.onCompletion();
         }

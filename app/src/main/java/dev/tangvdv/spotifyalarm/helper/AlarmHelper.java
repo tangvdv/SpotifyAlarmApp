@@ -19,6 +19,7 @@ import com.spotify.protocol.types.PlayerState;
 
 import java.util.Objects;
 
+import dev.tangvdv.spotifyalarm.R;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import dev.tangvdv.spotifyalarm.receiver.AlarmReceiver;
 
@@ -146,7 +147,7 @@ public class AlarmHelper {
         }
 
         NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
-        notificationManager.notify(42, NotificationHelper.getNotification(context, "Alarm is running !", "Time : "+String.format("%s:%s", formattedHour, formattedMinute), appPendingIntent));
+        notificationManager.notify(R.integer.notification_id, NotificationHelper.getNotification(context, "Alarm is running !", "Time : "+String.format("%s:%s", formattedHour, formattedMinute), appPendingIntent));
 
         setResult();
     }
@@ -163,7 +164,7 @@ public class AlarmHelper {
         if(spotifyAppRemote != null) spotifyAppRemote.getPlayerApi().pause();
 
         NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
-        notificationManager.cancel(42);
+        notificationManager.cancel(R.integer.notification_id);
 
         if(alarmLockScreenActivity != null) {
             alarmLockScreenActivity.finish();

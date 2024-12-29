@@ -1,3 +1,4 @@
 <resources>
     <integer name="request_code">0000</integer>
+    <integer name="notification_id">42</integer>
 </resources>
