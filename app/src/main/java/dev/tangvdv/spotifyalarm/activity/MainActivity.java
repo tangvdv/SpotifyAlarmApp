@@ -38,6 +38,7 @@ import dev.tangvdv.spotifyalarm.helper.AlarmHelper;
 import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
 import dev.tangvdv.spotifyalarm.helper.LogFile;
 import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.helper.NotificationHelper;
 import dev.tangvdv.spotifyalarm.helper.SpotifyAPI;
 import dev.tangvdv.spotifyalarm.helper.SpotifyAuthHelper;
 import dev.tangvdv.spotifyalarm.databinding.ActivityMainBinding;
@@ -209,6 +210,8 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
                                         alarmManager.cancel(alarmPendingIntent);
                                     }
                                     stopService(alarmServiceIntent);
+                                    NotificationHelper.cancelNotification(context);
+                                    saveAlarm();
                                 }
                             }
                         }

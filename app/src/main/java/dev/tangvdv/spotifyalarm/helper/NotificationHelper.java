@@ -43,4 +43,9 @@ public class NotificationHelper {
 
         return notificationBuilder.build();
     }
+
+    public static void cancelNotification(Context context){
+        NotificationManager notificationManager = getNotificationManager(context);
+        notificationManager.cancelAll();
+    }
 }
