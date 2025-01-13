@@ -3,15 +3,10 @@ package dev.tangvdv.spotifyalarm.activity;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -25,34 +20,16 @@ import java.util.Locale;
 
 import dev.tangvdv.spotifyalarm.helper.AlarmHelper;
 import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.model.AlarmModel;
 import dev.tangvdv.spotifyalarm.service.MusicService;
 
-public class AlarmLockScreenActivity extends AppCompatActivity implements MusicService.MusicServiceCallback {
+public class AlarmLockScreenActivity extends AppCompatActivity {
     private Handler handler;
     private TextView currentTimeTextView;
     private TextView currentDateTextView;
     private WindowManager windowManager;
     private View overlayView;
     private WindowManager.LayoutParams params;
-    private MusicService musicService;
-    private boolean isBound = false;
-    private boolean isCompleted = false;
-
-    private final ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
-            musicService = binder.getService();
-            isBound = true;
-            musicService.setCallback(AlarmLockScreenActivity.this);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            isBound = false;
-            musicService = null;
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +43,6 @@ public class AlarmLockScreenActivity extends AppCompatActivity implements MusicS
         serviceIntent.addFlags(Intent.FLAG_FROM_BACKGROUND);
 
         ContextCompat.startForegroundService(this, serviceIntent);
-        bindService(serviceIntent, connection, Context.BIND_AUTO_CREATE);
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -97,20 +73,11 @@ public class AlarmLockScreenActivity extends AppCompatActivity implements MusicS
         turnOffBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(isCompleted){
+                if(AlarmModel.getInstance().getIsRinging()){
                     finish();
                 }
             }
         });
-    }
-
-    public Activity getLockScreenActivity() {
-        return this;
-    }
-
-    @Override
-    public void onCompletion() {
-        isCompleted = true;
     }
 
     private void updateDateTime() {
@@ -134,20 +101,14 @@ public class AlarmLockScreenActivity extends AppCompatActivity implements MusicS
     }
 
     private void removeAlarm(){
-        if(isCompleted) {
-            windowManager.removeView(overlayView);
-            handler.removeCallbacksAndMessages(null);
-            AlarmHelper.getInstance(this).shutAlarmOff();
-        }
+        windowManager.removeView(overlayView);
+        handler.removeCallbacksAndMessages(null);
+        AlarmHelper.getInstance(this).shutAlarmOff();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (isBound) {
-            unbindService(connection);
-            isBound = false;
-        }
         removeAlarm();
     }
 

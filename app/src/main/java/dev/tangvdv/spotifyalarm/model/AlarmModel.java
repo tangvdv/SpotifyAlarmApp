@@ -13,6 +13,7 @@ public class AlarmModel {
     private int minute;
     private String playlist_uri;
     private Ringtone backupAlarmRingtone;
+    private boolean isRinging;
     public enum State {
         OFF,
         ON
@@ -30,6 +31,7 @@ public class AlarmModel {
     private SpotifyAppRemote spotifyAppRemote;
 
     private AlarmModel(){
+        this.isRinging = false;
         this.currentState = State.OFF;
     }
 
@@ -117,6 +119,10 @@ public class AlarmModel {
     public Ringtone getBackupAlarmRingtone() {
         return backupAlarmRingtone;
     }
+
+    public boolean getIsRinging() { return isRinging; }
+
+    public void setIsRinging(Boolean isRinging) { this.isRinging = isRinging; }
 
     public void setBackupAlarmRingtone(Ringtone backupAlarmRingtone) {
         this.backupAlarmRingtone = backupAlarmRingtone;

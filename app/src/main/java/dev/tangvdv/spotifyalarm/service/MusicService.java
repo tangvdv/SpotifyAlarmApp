@@ -36,14 +36,9 @@ public class MusicService extends Service {
     private static final String TAG = "MusicService";
     private SpotifyAppRemote mSpotifyAppRemote;
     private LogFile logFile;
-    private boolean isAlarmRinging;
     private SettingsModel settingsModel;
     private Context context;
     private final IBinder binder = new LocalBinder();
-    private MusicServiceCallback callback;
-    public interface MusicServiceCallback{
-        void onCompletion();
-    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
@@ -55,12 +50,12 @@ public class MusicService extends Service {
             settingsModel = new SettingsModel(AlarmSharedPreferences.loadSettings(this));
 
             logFile = new LogFile(this);
-            isAlarmRinging = false;
+            AlarmModel.getInstance().setIsRinging(true);
             if(isNetworkConnected()){
                 SpotifyRemoteHelper.spotifyAppRemoteConnection(context, new SpotifyRemoteHelper.SpotifyRemoteCallback() {
                     @Override
                     public void onRemoteConnected(SpotifyAppRemote spotifyAppRemote) {
-                        if (!isAlarmRinging) {
+                        if (!AlarmModel.getInstance().getIsRinging()) {
                             logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
                             mSpotifyAppRemote = spotifyAppRemote;
                             AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
@@ -70,7 +65,7 @@ public class MusicService extends Service {
 
                     @Override
                     public void onRemoteConnectionError(Throwable throwable) {
-                        if (!isAlarmRinging) {
+                        if (!AlarmModel.getInstance().getIsRinging()) {
                             logFile.writeToFile(TAG, throwable.getMessage());
                             Log.e(TAG, throwable.getMessage(), throwable);
                             playBackupAlarm();
@@ -81,6 +76,8 @@ public class MusicService extends Service {
             else{
                 playBackupAlarm();
             }
+
+            setNextAlarm();
         }
         catch(Exception e){
             logFile = new LogFile(context);
@@ -107,8 +104,9 @@ public class MusicService extends Service {
                 @Override
                 public void onCompletion(boolean isPlaying) {
                     if(isPlaying){
-                        alarmEnding();
+                        alarmIsRinging();
                     }
+                    stopForeground(STOP_FOREGROUND_DETACH);
                 }
             });
 
@@ -140,32 +138,26 @@ public class MusicService extends Service {
             @Override
             public void onCompletion(boolean isPlaying) {
                 if(isPlaying){
-                    Log.v(TAG, "BackupAlarmPlay");
-                    logFile.writeToFile(TAG, "BackupAlarmPlay");
-                    alarmEnding();
+                    alarmIsRinging();
                 }
+                stopForeground(STOP_FOREGROUND_DETACH);
             }
         });
     }
 
-    private void alarmEnding(){
-        isAlarmRinging = true;
+    private void alarmIsRinging(){
         AlarmHelper.getInstance(context).shutAlarmOffHandler();
         stopForeground(STOP_FOREGROUND_DETACH);
 
-        try{
-            Intent intent = new Intent(context, NotificationShutAlarmOffReceiver.class);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-            NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
-            notificationManager.notify(R.integer.notification_id,NotificationHelper.getNotification(context, "Alarm is ringing !","Click to shut alarm off", pendingIntent));
+        Intent intent = new Intent(context, NotificationShutAlarmOffReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
+        notificationManager.notify(R.integer.notification_id,NotificationHelper.getNotification(context, "Alarm is ringing !","Click to shut alarm off", pendingIntent));
 
-            callback.onCompletion();
-        }
-        catch (IllegalStateException illegalStateException){
-            logFile.writeToFile(TAG, Objects.requireNonNull(illegalStateException.getMessage()));
-            Log.e(TAG, Objects.requireNonNull(illegalStateException.getMessage()));
-        }
+        AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
+    }
 
+    private void setNextAlarm(){
         if(settingsModel.isRepeat()) AlarmHelper.getInstance(context).setAlarm();
         AlarmSharedPreferences.saveAlarm(this, AlarmModel.getInstance().getAlarmModelContent());
     }
@@ -185,10 +177,6 @@ public class MusicService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
-    }
-
-    public void setCallback(MusicServiceCallback callback) {
-        this.callback = callback;
     }
 
     public class LocalBinder extends Binder {

@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.media.Ringtone;
 import android.os.Build;
 import android.os.Handler;
-import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -53,56 +52,52 @@ public class AlarmHelper {
     public void getAlarmState(State state, AlarmHelper.AlarmStateCallback callback){
         if(AlarmModel.getInstance().getCurrentType() != null){
             handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                final Runnable r = this;
+            handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Log.i("AlarmState", "Checking Alarm State.");
-                    if(AlarmModel.getInstance().getCurrentType() == AlarmModel.Type.BACKUP){
-                        boolean isPlaying = AlarmModel.getInstance().getBackupAlarmRingtone().isPlaying();
-                        if(state == State.PLAY){
-                            if(isPlaying){
-                                callback.onCompletion(true);
-                            }
-                            else{
-                                handler.postDelayed(r, 1000);
-                            }
-                        }
-                        else if (state == State.PAUSE){
-                            if(!isPlaying){
-                                callback.onCompletion(false);
-                            }
-                            else{
-                                handler.postDelayed(r, 1000);
-                            }
-                        }
-                    }
-                    else if (AlarmModel.getInstance().getCurrentType() == AlarmModel.Type.SPOTIFY){
-                        AlarmModel.getInstance().getSpotifyAppRemote().getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
-                            @Override
-                            public void onResult(PlayerState playerState) {
-                                if(state == State.PLAY){
-                                    if(!playerState.isPaused){
-                                        callback.onCompletion(true);
-                                    }
-                                    else{
-                                        handler.postDelayed(r, 1000);
-                                    }
+                    final Runnable r = this;
+                    if(AlarmModel.getInstance().getIsRinging()) {
+                        if (AlarmModel.getInstance().getCurrentType() == AlarmModel.Type.BACKUP) {
+                            boolean isPlaying = AlarmModel.getInstance().getBackupAlarmRingtone().isPlaying();
+                            if (state == State.PLAY) {
+                                if (isPlaying) {
+                                    callback.onCompletion(true);
+                                } else {
+                                    handler.postDelayed(r, 1000);
                                 }
-                                else if (state == State.PAUSE){
-                                    if(playerState.isPaused){
-                                        callback.onCompletion(false);
-                                    }
-                                    else{
-                                        handler.postDelayed(r, 1000);
-                                    }
+                            } else if (state == State.PAUSE) {
+                                if (!isPlaying) {
+                                    callback.onCompletion(false);
+                                } else {
+                                    handler.postDelayed(r, 1000);
                                 }
                             }
-                        });
+                        } else if (AlarmModel.getInstance().getCurrentType() == AlarmModel.Type.SPOTIFY) {
+                            AlarmModel.getInstance().getSpotifyAppRemote().getPlayerApi().getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+                                @Override
+                                public void onResult(PlayerState playerState) {
+                                    if (state == State.PLAY) {
+                                        if (!playerState.isPaused) {
+                                            callback.onCompletion(true);
+                                        } else {
+                                            handler.postDelayed(r, 1000);
+                                        }
+                                    } else if (state == State.PAUSE) {
+                                        if (playerState.isPaused) {
+                                            callback.onCompletion(false);
+                                        } else {
+                                            handler.postDelayed(r, 1000);
+                                        }
+                                    }
+                                }
+                            });
+                        }
                     }
-
+                    else{
+                        callback.onCompletion(false);
+                    }
                 }
-            }, 0);
+            });
         }
     }
 
@@ -162,17 +157,26 @@ public class AlarmHelper {
     }
 
     public void shutAlarmOff(){
-        Ringtone defaultRingtone = AlarmModel.getInstance().getBackupAlarmRingtone();
-        SpotifyAppRemote spotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
-        if(defaultRingtone != null) defaultRingtone.stop();
-        if(spotifyAppRemote != null) spotifyAppRemote.getPlayerApi().pause();
+        AlarmHelper.getInstance(context).getAlarmState(State.PLAY, new AlarmStateCallback() {
+            @Override
+            public void onCompletion(boolean isPlaying) {
+                if(isPlaying){
+                    Ringtone defaultRingtone = AlarmModel.getInstance().getBackupAlarmRingtone();
+                    SpotifyAppRemote spotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
+                    if(defaultRingtone != null) defaultRingtone.stop();
+                    if(spotifyAppRemote != null) spotifyAppRemote.getPlayerApi().pause();
 
-        NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
-        notificationManager.cancel(R.integer.notification_id);
+                    AlarmModel.getInstance().setIsRinging(false);
 
-        if(alarmLockScreenActivity != null) {
-            alarmLockScreenActivity.finish();
-        }
+                    NotificationHelper.cancelNotification(context);
+
+                    if(alarmLockScreenActivity != null) {
+                        alarmLockScreenActivity.finish();
+                    }
+                    handler.removeCallbacksAndMessages(null);
+                }
+            }
+        });
     }
 
     public void shutAlarmOffHandler(){
