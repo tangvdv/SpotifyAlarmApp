@@ -212,6 +212,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
                                     stopService(alarmServiceIntent);
                                     NotificationHelper.cancelNotification(context);
                                     saveAlarm();
+                                    alarmBindingState();
                                 }
                             }
                         }
@@ -459,6 +460,9 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
                     binding.alarmTimeLeftText.setText(context.getString(R.string.alarm_time_left) + " : " + timeLeft);
 
                     handler.postDelayed(this, 1000);
+                }
+                else{
+                    alarmBindingState();
                 }
             }
         });
