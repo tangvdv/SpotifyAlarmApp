@@ -55,7 +55,7 @@ public class MusicService extends Service {
                 SpotifyRemoteHelper.spotifyAppRemoteConnection(context, new SpotifyRemoteHelper.SpotifyRemoteCallback() {
                     @Override
                     public void onRemoteConnected(SpotifyAppRemote spotifyAppRemote) {
-                        if (!AlarmModel.getInstance().getIsRinging()) {
+                        if (AlarmModel.getInstance().getIsRinging()) {
                             logFile.writeToFile(TAG, "SpotifyAppRemote on connected");
                             mSpotifyAppRemote = spotifyAppRemote;
                             AlarmModel.getInstance().setSpotifyAppRemote(spotifyAppRemote);
@@ -65,7 +65,7 @@ public class MusicService extends Service {
 
                     @Override
                     public void onRemoteConnectionError(Throwable throwable) {
-                        if (!AlarmModel.getInstance().getIsRinging()) {
+                        if (AlarmModel.getInstance().getIsRinging()) {
                             logFile.writeToFile(TAG, throwable.getMessage());
                             Log.e(TAG, throwable.getMessage(), throwable);
                             playBackupAlarm();
