@@ -456,8 +456,13 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
                     long hours = diffInMillies / (60 * 60 * 1000);
                     long minutes = (diffInMillies % (60 * 60 * 1000)) / (60 * 1000);
 
-                    String timeLeft = String.format("%02d:%02d", hours, minutes);
-                    binding.alarmTimeLeftText.setText(context.getString(R.string.alarm_time_left) + " : " + timeLeft);
+                    if(hours == 0 && minutes == 0){
+                        binding.alarmTimeLeftText.setText(context.getString(R.string.alarm_time_left_less));
+                    }
+                    else{
+                        String timeLeft = String.format("%02d:%02d", hours, minutes);
+                        binding.alarmTimeLeftText.setText(context.getString(R.string.alarm_time_left_more) + " : " + timeLeft);
+                    }
 
                     handler.postDelayed(this, 1000);
                 }

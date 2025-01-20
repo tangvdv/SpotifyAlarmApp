@@ -19,7 +19,8 @@
 
     // Main Activity
     <string name="button_select_music">Select music</string>
-    <string name="alarm_time_left">Alarm in</string>
+    <string name="alarm_time_left_more">Alarm in</string>
+    <string name="alarm_time_left_less">Alarm in less than 1 minute</string>
 
     // Settings Activity
     <string name="alarm_on">On</string>
