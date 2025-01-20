@@ -169,11 +169,15 @@ public class AlarmHelper {
             @Override
             public void onCompletion(boolean isPlaying) {
                 if(isPlaying){
-                    Ringtone defaultRingtone = AlarmModel.getInstance().getBackupAlarmRingtone();
-                    SpotifyAppRemote spotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
-                    if(defaultRingtone != null) defaultRingtone.stop();
-                    if(spotifyAppRemote != null) spotifyAppRemote.getPlayerApi().pause();
+                    if(AlarmModel.getInstance().getCurrentType() == AlarmModel.Type.SPOTIFY){
+                        SpotifyAppRemote spotifyAppRemote = AlarmModel.getInstance().getSpotifyAppRemote();
+                        if(spotifyAppRemote != null) spotifyAppRemote.getPlayerApi().pause();
+                    }
+                    if(AlarmModel.getInstance().getCurrentType() == AlarmModel.Type.BACKUP){
+                        Ringtone defaultRingtone = AlarmModel.getInstance().getBackupAlarmRingtone();
+                        if(defaultRingtone != null) defaultRingtone.stop();
 
+                    }
                     AlarmModel.getInstance().setIsRinging(false);
 
                     NotificationHelper.cancelNotification(context);
