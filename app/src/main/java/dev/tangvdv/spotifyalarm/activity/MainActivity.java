@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.CompoundButton;
 import android.widget.Toast;
+import android.text.format.DateFormat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CenterCrop;
@@ -54,6 +55,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Objects;
 
 public class MainActivity extends ActivityBase implements SpotifyAuthHelper.SpotifyAuthCallback {
@@ -397,7 +399,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
 
     private void selectTime(){
         timePicker = new MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H)
+                .setTimeFormat(DateFormat.is24HourFormat(context) ? TimeFormat.CLOCK_24H : TimeFormat.CLOCK_12H)
                 .setHour(AlarmModel.getInstance().getHour())
                 .setMinute(AlarmModel.getInstance().getMinute())
                 .setTitleText("Select Alarm Time")
@@ -424,10 +426,17 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
 
     private void alarmTextValue(){
         Date date = AlarmModel.getInstance().getCalendar().getTime();
-        String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
-        String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
-        binding.alarmTimeText.setText(String.format("%s:%s", formattedHour, formattedMinute));
-        binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd").format(date));
+
+        boolean is24HourFormat = DateFormat.is24HourFormat(context);
+        String timePattern = is24HourFormat ? "k:mm" : "K:mm a";
+
+        Locale locale = Locale.getDefault();
+
+        SimpleDateFormat timeFormat = new SimpleDateFormat(timePattern, locale);
+        String formattedTime = timeFormat.format(date);
+        binding.alarmTimeText.setText(formattedTime);
+
+        binding.alarmDateText.setText(new SimpleDateFormat("MMMM dd", locale).format(date));
     }
 
     private void alarmBindingState(){

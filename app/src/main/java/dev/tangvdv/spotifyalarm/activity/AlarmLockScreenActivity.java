@@ -3,10 +3,12 @@ package dev.tangvdv.spotifyalarm.activity;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -30,10 +32,13 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
     private WindowManager windowManager;
     private View overlayView;
     private WindowManager.LayoutParams params;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        context = this;
 
         AlarmHelper.getInstance(this).setLockScreenActivity(this);
 
@@ -84,13 +89,20 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM EEEE", Locale.getDefault());
+                boolean is24HourFormat = DateFormat.is24HourFormat(context);
+                String timePattern = is24HourFormat ? "k:mm" : "K:mm a";
+
+                Locale locale = Locale.getDefault();
+
+                SimpleDateFormat timeFormat = new SimpleDateFormat(timePattern, locale);
+                String formattedTime = timeFormat.format(AlarmModel.getInstance().getCalendar().getTime());
+
+                String datePattern = DateFormat.getBestDateTimePattern(locale, "MMMMd");
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern, locale);
                 String currentDate = dateFormat.format(new Date());
 
-                SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                String currentTime = timeFormat.format(new Date());
-
-                currentTimeTextView.setText(currentTime);
+                currentTimeTextView.setText(formattedTime);
                 currentDateTextView.setText(currentDate);
 
                 windowManager.updateViewLayout(overlayView, params);

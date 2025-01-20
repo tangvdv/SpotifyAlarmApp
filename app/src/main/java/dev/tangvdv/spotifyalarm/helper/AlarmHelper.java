@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.media.Ringtone;
 import android.os.Build;
 import android.os.Handler;
+import android.text.format.DateFormat;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -16,6 +17,8 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.types.PlayerState;
 
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.Objects;
 
 import dev.tangvdv.spotifyalarm.R;
@@ -135,8 +138,13 @@ public class AlarmHelper {
         AlarmModel.getInstance().setAlarmOn();
         AlarmSharedPreferences.saveAlarm(context, AlarmModel.getInstance().getAlarmModelContent());
 
-        String formattedHour = String.format("%02d", AlarmModel.getInstance().getHour());
-        String formattedMinute = String.format("%02d", AlarmModel.getInstance().getMinute());
+        boolean is24HourFormat = DateFormat.is24HourFormat(context);
+        String timePattern = is24HourFormat ? "k:mm" : "K:mm a";
+
+        Locale locale = Locale.getDefault();
+
+        SimpleDateFormat timeFormat = new SimpleDateFormat(timePattern, locale);
+        String formattedTime = timeFormat.format(AlarmModel.getInstance().getCalendar().getTime());
 
         Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
         PendingIntent appPendingIntent = null;
@@ -146,7 +154,7 @@ public class AlarmHelper {
         }
 
         NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
-        notificationManager.notify(R.integer.notification_id, NotificationHelper.getNotification(context, "Alarm is running !", "Time : "+String.format("%s:%s", formattedHour, formattedMinute), appPendingIntent));
+        notificationManager.notify(R.integer.notification_id, NotificationHelper.getNotification(context, "Alarm is running !", "Time : "+formattedTime, appPendingIntent));
 
         setResult();
     }
