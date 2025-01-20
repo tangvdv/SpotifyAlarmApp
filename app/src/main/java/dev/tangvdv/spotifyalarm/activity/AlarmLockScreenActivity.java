@@ -78,9 +78,7 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
         turnOffBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(AlarmModel.getInstance().getIsRinging()){
-                    finish();
-                }
+                finish();
             }
         });
     }
