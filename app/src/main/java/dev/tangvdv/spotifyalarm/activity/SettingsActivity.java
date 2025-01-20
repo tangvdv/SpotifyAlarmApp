@@ -35,7 +35,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void setSettingsView(){
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         binding.seekBarSoundVolume.setProgress(settingsModel.getVolume());
-        binding.seekBarSoundVolume.setMax(am.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+        binding.seekBarSoundVolume.setMax(am.getStreamMaxVolume(AudioManager.STREAM_ALARM));
         binding.alarmStateText.setText(AlarmModel.getInstance().getCurrentState() == AlarmModel.State.ON ? context.getString(R.string.alarm_on) : context.getString(R.string.alarm_off));
 
         binding.switchRepeatSettings.setChecked(settingsModel.isRepeat());
@@ -102,7 +102,10 @@ public class SettingsActivity extends AppCompatActivity {
         binding.seekBarSoundVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if(i < min) binding.seekBarSoundVolume.setProgress(min);
+                if(i < min) {
+                    i = min;
+                    binding.seekBarSoundVolume.setProgress(min);
+                }
                 settingsModel.setVolume(i);
             }
 

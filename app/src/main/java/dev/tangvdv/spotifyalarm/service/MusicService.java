@@ -129,7 +129,10 @@ public class MusicService extends Service {
         defaultRingtone.setAudioAttributes(audioAttributes);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             defaultRingtone.setLooping(settingsModel.isLooping());
-            defaultRingtone.setVolume(settingsModel.getVolume());
+
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            float volume = (float) settingsModel.getVolume() / am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+            defaultRingtone.setVolume(volume);
         }
         defaultRingtone.play();
         AlarmModel.getInstance().setBackupAlarmRingtone(defaultRingtone);
