@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -84,20 +85,21 @@ public class AlarmLockScreenActivity extends AppCompatActivity {
     }
 
     private void updateDateTime() {
+        boolean is24HourFormat = DateFormat.is24HourFormat(context);
+        String timePattern = is24HourFormat ? "k:mm" : "K:mm a";
+
+        Locale locale = Locale.getDefault();
+
+        SimpleDateFormat timeFormat = new SimpleDateFormat(timePattern, locale);
+
+        String datePattern = DateFormat.getBestDateTimePattern(locale, "MMMMd");
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern, locale);
+
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                boolean is24HourFormat = DateFormat.is24HourFormat(context);
-                String timePattern = is24HourFormat ? "k:mm" : "K:mm a";
-
-                Locale locale = Locale.getDefault();
-
-                SimpleDateFormat timeFormat = new SimpleDateFormat(timePattern, locale);
-                String formattedTime = timeFormat.format(AlarmModel.getInstance().getCalendar().getTime());
-
-                String datePattern = DateFormat.getBestDateTimePattern(locale, "MMMMd");
-
-                SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern, locale);
+                String formattedTime = timeFormat.format(Calendar.getInstance().getTime());
                 String currentDate = dateFormat.format(new Date());
 
                 currentTimeTextView.setText(formattedTime);
