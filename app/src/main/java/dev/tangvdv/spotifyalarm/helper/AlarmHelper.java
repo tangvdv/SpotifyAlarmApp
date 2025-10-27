@@ -150,7 +150,7 @@ public class AlarmHelper {
         PendingIntent appPendingIntent = null;
         if(launchIntent != null){
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            appPendingIntent = PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            appPendingIntent = PendingIntent.getActivity(context, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         }
 
         NotificationManager notificationManager = NotificationHelper.getNotificationManager(context);
