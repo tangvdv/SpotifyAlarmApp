@@ -15,6 +15,7 @@
     <string name="toggle_button_album">Albums</string>
     <string name="toggle_button_artist">Artists</string>
     <string name="library_fetch_error">There was a problem fetching the library</string>
+    <string name="library_empty">Your library is empty</string>
     <string name="button_refresh">Refresh</string>
 
     // Main Activity

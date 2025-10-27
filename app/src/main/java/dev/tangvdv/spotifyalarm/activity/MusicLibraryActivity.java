@@ -23,6 +23,7 @@ import com.bumptech.glide.request.RequestOptions;
 
 import dev.tangvdv.spotifyalarm.helper.AlarmSharedPreferences;
 import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.helper.LogFile;
 import dev.tangvdv.spotifyalarm.helper.SpotifyAPI;
 import dev.tangvdv.spotifyalarm.helper.SpotifyAuthHelper;
 import dev.tangvdv.spotifyalarm.databinding.ActivityLibraryBinding;
@@ -33,15 +34,20 @@ import java.util.List;
 import java.util.Objects;
 
 public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHelper.SpotifyAuthCallback {
+    private static final String TAG = "MusicLibraryActivity";
     private Context context;
     private ActivityLibraryBinding binding;
     private List<String> filterTypes;
     private List<MusicModel> musicModelList;
-    private int fetchedPlaylist, fetchedAlbum, fetchedArtist = -1;
-    private boolean errorResponse = true;
-    private String token;
+    private State playlistRequest, albumRequest, artistRequest;
     private SpotifyAPI spotifyAPI;
     private SpotifyAuthHelper spotifyAuthHelper;
+    private LogFile logFile;
+    private enum State {
+        SUCCEED,
+        FAILED,
+        IN_PROGRESS
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +56,7 @@ public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHel
         context = this;
         binding = ActivityLibraryBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        logFile = new LogFile(this);
 
         if(!isNetworkConnected()){
             setResultActivity(Activity.RESULT_CANCELED, context.getString(R.string.network_error));
@@ -65,13 +72,14 @@ public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHel
 
     @Override
     public void onSpotifyConnected(String token) {
-        this.token = token;
+        spotifyAPI = new SpotifyAPI(this, token);
         getLibrary();
         bindingManager();
     }
 
     @Override
     public void onSpotifyConnectionError(String error) {
+        logFile.writeToFile(TAG, error);
         setResultActivity(Activity.RESULT_CANCELED, error);
     }
 
@@ -102,10 +110,18 @@ public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHel
             }
         });
 
-        binding.btnRefresh.setOnClickListener(new View.OnClickListener() {
+        binding.btnRefreshError.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 binding.errorLayout.setVisibility(View.GONE);
+                getLibrary();
+            }
+        });
+
+        binding.btnRefreshEmpty.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                binding.emptyLayout.setVisibility(View.GONE);
                 getLibrary();
             }
         });
@@ -123,13 +139,26 @@ public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHel
         handler.post(new Runnable() {
             @Override
             public void run() {
-                if(fetchedPlaylist == -1 || fetchedAlbum == -1 || fetchedArtist == -1){
+                if(
+                        playlistRequest == State.IN_PROGRESS ||
+                        albumRequest == State.IN_PROGRESS ||
+                        artistRequest == State.IN_PROGRESS
+                ){
                     handler.postDelayed(this, 1000);
                 }
                 else{
                     binding.progressBar.setVisibility(View.GONE);
-                    if(!errorResponse){
-                        applyFilter();
+                    if(
+                            playlistRequest == State.SUCCEED ||
+                            albumRequest == State.SUCCEED ||
+                            artistRequest == State.SUCCEED
+                    ){
+                        if(musicModelList.isEmpty()){
+                            binding.emptyLayout.setVisibility(View.VISIBLE);
+                        }
+                        else{
+                            applyFilter();
+                        }
                     }
                     else {
                         binding.errorLayout.setVisibility(View.VISIBLE);
@@ -149,58 +178,55 @@ public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHel
     }
 
     private void getUserPlaylists(){
-        fetchedPlaylist = -1;
-        spotifyAPI = new SpotifyAPI(this, token);
+        playlistRequest = State.IN_PROGRESS;
         spotifyAPI.getUserPlaylists(new SpotifyAPI.SpotifyAPICallback() {
             @Override
             public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
                     musicModelList.addAll(list);
-                    fetchedPlaylist = 200;
-                    errorResponse = false;
                 }
+                playlistRequest = State.SUCCEED;
             }
             @Override
             public void onError(String error) {
-                fetchedPlaylist = 404;
+                playlistRequest = State.FAILED;
+                logFile.writeToFile(TAG, error);
             }
         });
     }
 
     private void getUserAlbums(){
-        fetchedAlbum = -1;
-        spotifyAPI = new SpotifyAPI(this, token);
+        albumRequest = State.IN_PROGRESS;
         spotifyAPI.getUserAlbums(new SpotifyAPI.SpotifyAPICallback() {
             @Override
             public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
                     musicModelList.addAll(list);
-                    fetchedAlbum = 200;
-                    errorResponse = false;
                 }
+                albumRequest = State.SUCCEED;
             }
             @Override
             public void onError(String error) {
-                fetchedAlbum = 404;
+                albumRequest = State.FAILED;
+                logFile.writeToFile(TAG, error);
             }
         });
     }
 
     private void getUserArtists(){
-        fetchedArtist = -1;
-        spotifyAPI = new SpotifyAPI(this, token);
+        artistRequest = State.IN_PROGRESS;
         spotifyAPI.getUserArtists(new SpotifyAPI.SpotifyAPICallback() {
             @Override
             public void onSuccess(List<MusicModel> list) {
                 if(list != null && !list.isEmpty()){
                     musicModelList.addAll(list);
-                    fetchedArtist = 200;
-                    errorResponse = false;
                 }
+                artistRequest = State.SUCCEED;
             }
             @Override
             public void onError(String error) {
-                fetchedArtist = 404;
+                artistRequest = State.FAILED;
+                logFile.writeToFile(TAG, error);
             }
         });
     }
