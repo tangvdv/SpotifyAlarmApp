@@ -36,7 +36,7 @@ public class SpotifyAuthHelper {
 
         if(!isTokenValid(token)){
             AuthorizationRequest.Builder builder =
-                    new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.TOKEN, context.getString(R.string.redirect_uri));
+                    new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.CODE, context.getString(R.string.redirect_uri));
 
             builder.setScopes(context.getResources().getStringArray(R.array.scopes));
             builder.setShowDialog(true);
@@ -52,7 +52,7 @@ public class SpotifyAuthHelper {
     public void handlerActivityResult(int requestCode, int resultCode, Intent intent) {
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
-            if (response.getType() == AuthorizationResponse.Type.TOKEN) {
+            if (response.getType() == AuthorizationResponse.Type.CODE) {
                 token = response.getAccessToken();
                 AlarmSharedPreferences.saveToken(context, token);
                 Long expirationTime = System.currentTimeMillis() + (response.getExpiresIn() * 1000L);
