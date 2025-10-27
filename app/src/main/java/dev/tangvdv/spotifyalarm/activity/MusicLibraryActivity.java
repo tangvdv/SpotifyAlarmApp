@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -71,8 +72,9 @@ public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHel
     }
 
     @Override
-    public void onSpotifyConnected(String token) {
-        spotifyAPI = new SpotifyAPI(this, token);
+    public void onSpotifyConnected() {
+        spotifyAPI = new SpotifyAPI(this, AlarmSharedPreferences.loadCode(context));
+
         getLibrary();
         bindingManager();
     }

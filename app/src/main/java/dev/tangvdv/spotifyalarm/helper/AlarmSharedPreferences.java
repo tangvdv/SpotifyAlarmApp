@@ -50,6 +50,11 @@ public class AlarmSharedPreferences {
         return sharedPreferences.getString("token", "");
     }
 
+    public static String loadCode(Context context){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        return sharedPreferences.getString("code", "");
+    }
+
     public static void saveAuthSpotify(Context context, boolean isAuth){
         if(sharedPreferences == null) loadSharedPreferences(context);
         saveSharedPreferences(context, "auth_spotify", isAuth);
@@ -83,6 +88,11 @@ public class AlarmSharedPreferences {
     public static void saveToken(Context context, String token){
         if(sharedPreferences == null) loadSharedPreferences(context);
         saveSharedPreferences(context, "token", token);
+    }
+
+    public static void saveCode(Context context, String token){
+        if(sharedPreferences == null) loadSharedPreferences(context);
+        saveSharedPreferences(context, "code", token);
     }
 
     public static void saveExpirationTimeToken(Context context, Long time){

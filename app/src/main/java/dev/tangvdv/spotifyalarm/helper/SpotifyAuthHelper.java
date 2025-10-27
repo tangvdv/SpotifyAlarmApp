@@ -15,10 +15,9 @@ public class SpotifyAuthHelper {
     private final String TAG = "SpotifyActivity";
     private final Context context;
     private final SpotifyAuthCallback callback;
-    private String token;
 
     public interface SpotifyAuthCallback{
-        void onSpotifyConnected(String token);
+        void onSpotifyConnected();
         void onSpotifyConnectionError(String error);
     }
 
@@ -27,39 +26,25 @@ public class SpotifyAuthHelper {
         this.callback = callback;
     }
 
-    public boolean isTokenValid(String token){
-        return (token != null && !token.equals("") && System.currentTimeMillis() < AlarmSharedPreferences.loadExpirationTimeToken(context));
-    }
-
     public void startSpotifyActivity(Activity activity){
-        token = AlarmSharedPreferences.loadToken(context);
+        AuthorizationRequest.Builder builder =
+                new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.CODE, context.getString(R.string.redirect_uri));
 
-        if(!isTokenValid(token)){
-            AuthorizationRequest.Builder builder =
-                    new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.CODE, context.getString(R.string.redirect_uri));
+        builder.setScopes(context.getResources().getStringArray(R.array.scopes));
+        builder.setShowDialog(true);
+        AuthorizationRequest request = builder.build();
 
-            builder.setScopes(context.getResources().getStringArray(R.array.scopes));
-            builder.setShowDialog(true);
-            AuthorizationRequest request = builder.build();
-
-            AuthorizationClient.openLoginActivity(activity, context.getResources().getInteger(R.integer.request_code) ,request);
-        }
-        else{
-            callback.onSpotifyConnected(token);
-        }
+        AuthorizationClient.openLoginActivity(activity, context.getResources().getInteger(R.integer.request_code) ,request);
     }
 
     public void handlerActivityResult(int requestCode, int resultCode, Intent intent) {
         if (requestCode == context.getResources().getInteger(R.integer.request_code)) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
+            String code = response.getCode();
+
             if (response.getType() == AuthorizationResponse.Type.CODE) {
-                token = response.getAccessToken();
-                AlarmSharedPreferences.saveToken(context, token);
-                Long expirationTime = System.currentTimeMillis() + (response.getExpiresIn() * 1000L);
-                AlarmSharedPreferences.saveExpirationTimeToken(context, expirationTime);
-
-                callback.onSpotifyConnected(token);
-
+                AlarmSharedPreferences.saveCode(context, code);
+                callback.onSpotifyConnected();
             }
             else{
                 Log.e(TAG, "Response error : "+response.getError());

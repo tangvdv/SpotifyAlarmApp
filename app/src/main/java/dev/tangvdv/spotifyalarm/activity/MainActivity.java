@@ -45,6 +45,7 @@ import dev.tangvdv.spotifyalarm.helper.SpotifyAuthHelper;
 import dev.tangvdv.spotifyalarm.databinding.ActivityMainBinding;
 import dev.tangvdv.spotifyalarm.databinding.UserProfileDialogBinding;
 import dev.tangvdv.spotifyalarm.model.AlarmModel;
+import dev.tangvdv.spotifyalarm.model.MusicModel;
 import dev.tangvdv.spotifyalarm.service.AlarmManagerService;
 
 import com.google.android.material.timepicker.MaterialTimePicker;
@@ -55,6 +56,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -142,7 +144,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
     }
 
     @Override
-    public void onSpotifyConnected(String token) {
+    public void onSpotifyConnected() {
         isSpotifyActivityConnected = true;
         setupActivityViews();
     }
@@ -263,7 +265,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
         }
         else {
             if(isSpotifyActivityConnected){
-                SpotifyAPI spotifyAPI = new SpotifyAPI(context, AlarmSharedPreferences.loadToken(context));
+                SpotifyAPI spotifyAPI = new SpotifyAPI(context, AlarmSharedPreferences.loadCode(context));
                 spotifyAPI.getUserProfile(new SpotifyAPI.SpotifyAPIUserProfileCallback() {
                     @Override
                     public void onSuccess(String name, String image_url) {

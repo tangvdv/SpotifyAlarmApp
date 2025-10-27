@@ -19,17 +19,27 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class SpotifyAPI {
     private static final String TAG = "SpotifyAPI";
-    private final String TOKEN;
+
+    private String TOKEN;
+
+    private final String CODE;
+
     Context context;
 
     public interface SpotifyAPICallback{
         void onSuccess(List<MusicModel> musicModelList);
+        void onError(String error);
+    }
+
+    public interface SpotifyAPIAuthCallback{
+        void onSuccess(String token);
         void onError(String error);
     }
 
@@ -39,9 +49,82 @@ public class SpotifyAPI {
         void onError(String error);
     }
 
-    public SpotifyAPI(Context context, String token){
+    public SpotifyAPI(Context context, String code){
         this.context = context;
+        this.CODE = code;
+        this.TOKEN = getToken();
+    }
+
+    public void setToken(String token){
         this.TOKEN = token;
+    }
+
+    public String getToken(){
+        if(!isTokenValid(this.TOKEN)){
+            getUserToken(new SpotifyAPIAuthCallback() {
+                @Override
+                public void onSuccess(String token) {
+                    setToken(token);
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "onResponseError : " + error);
+                }
+            });
+        }
+
+        return this.TOKEN;
+    }
+
+    private boolean isTokenValid(String token){
+        return (token != null && !token.equals("") && System.currentTimeMillis() < AlarmSharedPreferences.loadExpirationTimeToken(context));
+    }
+
+    public void getUserToken(SpotifyAPIAuthCallback callback){
+        RequestQueue reqQueue = Volley.newRequestQueue(context);
+
+        StringRequest request = new StringRequest(Request.Method.POST, "https://accounts.spotify.com/api/token", new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject obj = new JSONObject(response);
+                    TOKEN = obj.getString("access_token");
+                    Long expirationTime = System.currentTimeMillis() + (obj.getInt("expires_in") * 1000L);
+                    AlarmSharedPreferences.saveExpirationTimeToken(context, expirationTime);
+                    callback.onSuccess(TOKEN);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    callback.onError(e.getMessage());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onError(error.getMessage());
+            }
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                String clientId = context.getString(R.string.client_id);
+                String clientSecret = context.getString(R.string.client_secret);
+                String encoding = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
+                headers.put("Authorization", "Basic " + encoding);
+                headers.put("Content-Type", "application/x-www-form-urlencoded");
+                return headers;
+            }
+
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("grant_type", "authorization_code");
+                params.put("code", CODE);
+                params.put("redirect_uri", context.getString(R.string.redirect_uri));
+                return params;
+            }
+        };
+        reqQueue.add(request);
     }
 
     public void getUserPlaylists(SpotifyAPICallback callback){
