@@ -76,6 +76,7 @@ public class MainActivity extends ActivityBase implements SpotifyAuthHelper.Spot
                 public void onActivityResult(ActivityResult result) {
                     if (result.getResultCode() == Activity.RESULT_OK) {
                         setPlaylistLayout();
+                        saveAlarm();
                     }
                     else if(result.getResultCode() == Activity.RESULT_CANCELED){
                         Intent data = result.getData();
