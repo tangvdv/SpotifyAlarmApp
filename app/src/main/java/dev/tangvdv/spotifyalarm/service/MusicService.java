@@ -29,6 +29,8 @@ import dev.tangvdv.spotifyalarm.model.SettingsModel;
 
 import com.spotify.android.appremote.api.PlayerApi;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.spotify.protocol.client.CallResult;
+import com.spotify.protocol.types.Empty;
 
 import java.util.Objects;
 
@@ -90,29 +92,53 @@ public class MusicService extends Service {
 
     private void playSpotifyAlarm() {
         String uri = AlarmModel.getInstance().getPlaylist_uri();
-        if (!uri.equals("")) {
-            // APPLY SETTINGS
-            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
-            mSpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle());
-            mSpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice();
-            mSpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM);
-
-            AlarmModel.getInstance().setAlarmSpotifyType();
-
-            AlarmHelper.getInstance(context).getAlarmState(AlarmHelper.State.PLAY, new AlarmHelper.AlarmStateCallback() {
-                @Override
-                public void onCompletion(boolean isPlaying) {
-                    if(isPlaying){
-                        alarmIsRinging();
+        if (mSpotifyAppRemote != null){
+            if (!uri.equals("")) {
+                // APPLY SETTINGS
+                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                am.setStreamVolume(AudioManager.STREAM_ALARM, settingsModel.getVolume(), 0);
+                mSpotifyAppRemote.getPlayerApi().setShuffle(settingsModel.isShuffle()).setResultCallback(new CallResult.ResultCallback<Empty>() {
+                    @Override
+                    public void onResult(Empty empty) {
+                        logFile.writeToFile(TAG, "Set shuffle setting to : "+settingsModel.isShuffle());
                     }
-                    stopForeground(STOP_FOREGROUND_DETACH);
-                }
-            });
+                });
+                mSpotifyAppRemote.getConnectApi().connectSwitchToLocalDevice().setResultCallback(new CallResult.ResultCallback<Empty>() {
+                    @Override
+                    public void onResult(Empty empty) {
+                        logFile.writeToFile(TAG, "Connect to local device successfully");
+                    }
+                });
+                mSpotifyAppRemote.getPlayerApi().play(uri, PlayerApi.StreamType.ALARM).setResultCallback(new CallResult.ResultCallback<Empty>() {
+                    @Override
+                    public void onResult(Empty empty) {
+                        logFile.writeToFile(TAG, "Spotify is playing as an alarm on this uri : "+uri);
+                    }
+                });
 
-        } else {
-            Log.e(TAG, "Playlist uri not found");
-            logFile.writeToFile(TAG, "Playlist uri not found");
+                AlarmModel.getInstance().setAlarmSpotifyType();
+
+                AlarmHelper.getInstance(context).getAlarmState(AlarmHelper.State.PLAY, new AlarmHelper.AlarmStateCallback() {
+                    @Override
+                    public void onCompletion(boolean isPlaying) {
+                        if(isPlaying){
+                            alarmIsRinging();
+                        }
+                        stopForeground(STOP_FOREGROUND_DETACH);
+                    }
+                });
+
+            }
+            else {
+
+                Log.e(TAG, "Playlist uri not found");
+                logFile.writeToFile(TAG, "Playlist uri not found");
+                playBackupAlarm();
+            }
+        }
+        else {
+            Log.e(TAG, "Spotify App Remote not found");
+            logFile.writeToFile(TAG, "Spotify App Remote not found");
             playBackupAlarm();
         }
     }
