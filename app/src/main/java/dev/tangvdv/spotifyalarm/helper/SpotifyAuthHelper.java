@@ -10,8 +10,11 @@ import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.SpotifyConstants;
 
 public class SpotifyAuthHelper {
+    private static final String CLIENT_ID = SpotifyConstants.CLIENT_ID;
+    private static final String REDIRECT_URI = SpotifyConstants.REDIRECT_URI;
     private final String TAG = "SpotifyActivity";
     private final Context context;
     private final SpotifyAuthCallback callback;
@@ -28,7 +31,7 @@ public class SpotifyAuthHelper {
 
     public void startSpotifyActivity(Activity activity){
         AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(context.getString(R.string.client_id), AuthorizationResponse.Type.CODE, context.getString(R.string.redirect_uri));
+                new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.CODE, REDIRECT_URI);
 
         builder.setScopes(context.getResources().getStringArray(R.array.scopes));
         builder.setShowDialog(true);

@@ -7,8 +7,11 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import dev.tangvdv.spotifyalarm.R;
+import dev.tangvdv.spotifyalarm.SpotifyConstants;
 
 public class SpotifyRemoteHelper {
+    private static final String CLIENT_ID = SpotifyConstants.CLIENT_ID;
+    private static final String REDIRECT_URI = SpotifyConstants.REDIRECT_URI;
     public interface SpotifyRemoteCallback{
         void onRemoteConnected(SpotifyAppRemote spotifyAppRemote);
         void onRemoteConnectionError(Throwable throwable);
@@ -16,8 +19,8 @@ public class SpotifyRemoteHelper {
 
     public static void spotifyAppRemoteConnection(Context context, SpotifyRemoteCallback callback) {
         ConnectionParams connectionParams =
-                new ConnectionParams.Builder(context.getString(R.string.client_id))
-                        .setRedirectUri(context.getString(R.string.redirect_uri))
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
                         .showAuthView(true)
                         .build();
 

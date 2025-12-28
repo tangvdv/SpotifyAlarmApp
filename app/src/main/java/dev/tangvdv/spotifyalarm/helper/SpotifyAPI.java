@@ -23,6 +23,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import dev.tangvdv.spotifyalarm.SpotifyConstants;
 
 public class SpotifyAPI {
     private static final String TAG = "SpotifyAPI";
@@ -30,6 +31,10 @@ public class SpotifyAPI {
     private String TOKEN;
 
     private final String CODE;
+
+    private static final String CLIENT_ID = SpotifyConstants.CLIENT_ID;
+    private static final String CLIENT_SECRET = SpotifyConstants.CLIENT_SECRET;
+    private static final String REDIRECT_URI = SpotifyConstants.REDIRECT_URI;
 
     Context context;
 
@@ -107,9 +112,7 @@ public class SpotifyAPI {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> headers = new HashMap<>();
-                String clientId = context.getString(R.string.client_id);
-                String clientSecret = context.getString(R.string.client_secret);
-                String encoding = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
+                String encoding = Base64.getEncoder().encodeToString((CLIENT_ID + ":" + CLIENT_SECRET).getBytes());
                 headers.put("Authorization", "Basic " + encoding);
                 headers.put("Content-Type", "application/x-www-form-urlencoded");
                 return headers;
@@ -120,7 +123,7 @@ public class SpotifyAPI {
                 Map<String, String> params = new HashMap<>();
                 params.put("grant_type", "authorization_code");
                 params.put("code", CODE);
-                params.put("redirect_uri", context.getString(R.string.redirect_uri));
+                params.put("redirect_uri", REDIRECT_URI);
                 return params;
             }
         };
