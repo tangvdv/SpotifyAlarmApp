@@ -63,6 +63,12 @@ A simple alarm application that uses Spotify to play music when triggered. If Sp
     When the alarm goes off:
       - It will attempt to play the selected playlist via Spotify.
       - If Spotify is unavailable (no internet or app crash) or if no playlist is found, it will play a local alarm sound.
+  
+## Overview
+
+<img width="193" height="432.5" alt="spotify_alarm_main" src="https://github.com/user-attachments/assets/b7d7b609-04ab-4eb4-bb96-0c4825c28c74" />
+<img width="193" height="432.5" alt="spotify_alarm_library" src="https://github.com/user-attachments/assets/6479b0c1-f17a-4d08-a2f0-d9be7b6ec68a" />
+
 
 ## License
 
