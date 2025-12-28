@@ -1,4 +1,9 @@
+<div align="center">
+
 # SpotifyAlarm
+
+</div>
+
 A simple alarm application that uses Spotify to play music when triggered. If Spotify is unavailable, it falls back to a local phone alarm.
 
 ---
@@ -58,5 +63,9 @@ A simple alarm application that uses Spotify to play music when triggered. If Sp
     When the alarm goes off:
       - It will attempt to play the selected playlist via Spotify.
       - If Spotify is unavailable (no internet or app crash) or if no playlist is found, it will play a local alarm sound.
+
+## License
+
+This project is Licensed under the [MIT](/LICENSE) License.
 
 #SpotifyAlarm #AlarmApp #MusicAlarm #AndroidDev
