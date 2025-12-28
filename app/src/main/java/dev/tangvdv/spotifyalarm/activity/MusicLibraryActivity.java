@@ -74,8 +74,17 @@ public class MusicLibraryActivity extends ActivityBase implements SpotifyAuthHel
     @Override
     public void onSpotifyConnected() {
         spotifyAPI = new SpotifyAPI(this, AlarmSharedPreferences.loadCode(context));
+        spotifyAPI.getUserToken(new SpotifyAPI.SpotifyAPIAuthCallback() {
+            @Override
+            public void onSuccess(String token) {
+                getLibrary();
+            }
 
-        getLibrary();
+            @Override
+            public void onError(String error) {
+                setResultActivity(Activity.RESULT_CANCELED, context.getString(R.string.token_error));
+            }
+        });
         bindingManager();
     }
 

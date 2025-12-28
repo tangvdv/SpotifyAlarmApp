@@ -47,4 +47,5 @@
     <string name="spotify_activity_error">Failed to open spotify activity</string>
     <string name="spotify_app_missing_error">Couldn\'t find Spotify application</string>
     <string name="token_null">TOKEN is null</string>
+    <string name="token_error">Couldn\'t get user TOKEN</string>
 </resources>

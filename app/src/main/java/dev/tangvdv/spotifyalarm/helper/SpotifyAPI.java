@@ -57,29 +57,6 @@ public class SpotifyAPI {
     public SpotifyAPI(Context context, String code){
         this.context = context;
         this.CODE = code;
-        this.TOKEN = getToken();
-    }
-
-    public void setToken(String token){
-        this.TOKEN = token;
-    }
-
-    public String getToken(){
-        if(!isTokenValid(this.TOKEN)){
-            getUserToken(new SpotifyAPIAuthCallback() {
-                @Override
-                public void onSuccess(String token) {
-                    setToken(token);
-                }
-
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "onResponseError : " + error);
-                }
-            });
-        }
-
-        return this.TOKEN;
     }
 
     private boolean isTokenValid(String token){
@@ -97,7 +74,9 @@ public class SpotifyAPI {
                     TOKEN = obj.getString("access_token");
                     Long expirationTime = System.currentTimeMillis() + (obj.getInt("expires_in") * 1000L);
                     AlarmSharedPreferences.saveExpirationTimeToken(context, expirationTime);
-                    callback.onSuccess(TOKEN);
+
+                    if(isTokenValid(TOKEN))
+                        callback.onSuccess(TOKEN);
                 } catch (JSONException e) {
                     e.printStackTrace();
                     callback.onError(e.getMessage());
